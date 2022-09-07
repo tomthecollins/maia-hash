@@ -5,7 +5,7 @@
  * Algorithms, Inc. in various applications that we have produced or are
  * developing currently.
  *
- * @version 0.0.2
+ * @version 0.0.3
  * @author Tom Collins
  * @copyright 2022
  *

@@ -68,4 +68,4 @@ TBD
 
 ## Release History
 
-* 0.0.0-2 Initial release
+* 0.0.0-3 Initial release and bug fixes
