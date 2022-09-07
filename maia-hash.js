@@ -405,7 +405,7 @@ var mf = (function () {
    * Algorithms, Inc. in various applications that we have produced or are
    * developing currently.
    *
-   * @version 0.0.0
+   * @version 0.0.1
    * @author Tom Collins
    * @copyright 2022
    *
@@ -419,7 +419,7 @@ var mf = (function () {
 
 
   const OntimePitchHasher$1 = OntimePitchHasher;
-  const Grid = Grid_default;
+  // export const Grid = Grid_default
 
 
   var maiaHash = {

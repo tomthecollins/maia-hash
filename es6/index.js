@@ -5,7 +5,7 @@
  * Algorithms, Inc. in various applications that we have produced or are
  * developing currently.
  *
- * @version 0.0.0
+ * @version 0.0.1
  * @author Tom Collins
  * @copyright 2022
  *
@@ -21,7 +21,7 @@ import OntimePitchHasher_default from './OntimePitchHasher'
 
 
 export const OntimePitchHasher = OntimePitchHasher_default
-export const Grid = Grid_default
+// export const Grid = Grid_default
 
 
 export default {

@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.Grid = exports.OntimePitchHasher = undefined;
+exports.OntimePitchHasher = undefined;
 
 var _OntimePitchHasher = require('./OntimePitchHasher');
 
@@ -19,20 +19,22 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 // } from './util_key'
 
 
-var OntimePitchHasher = exports.OntimePitchHasher = _OntimePitchHasher2.default; /**
-                                                                                  * @file Welcome to the API for MAIA Hash!
-                                                                                  *
-                                                                                  * MAIA Hash is a JavaScript package used by Music Artificial Intelligence
-                                                                                  * Algorithms, Inc. in various applications that we have produced or are
-                                                                                  * developing currently.
-                                                                                  *
-                                                                                  * @version 0.0.0
-                                                                                  * @author Tom Collins
-                                                                                  * @copyright 2022
-                                                                                  *
-                                                                                  */
+var OntimePitchHasher = exports.OntimePitchHasher = _OntimePitchHasher2.default;
+// export const Grid = Grid_default
 
-var Grid = exports.Grid = Grid_default;
+
+/**
+ * @file Welcome to the API for MAIA Hash!
+ *
+ * MAIA Hash is a JavaScript package used by Music Artificial Intelligence
+ * Algorithms, Inc. in various applications that we have produced or are
+ * developing currently.
+ *
+ * @version 0.0.1
+ * @author Tom Collins
+ * @copyright 2022
+ *
+ */
 
 exports.default = {
   OntimePitchHasher: OntimePitchHasher
