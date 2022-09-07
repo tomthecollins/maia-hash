@@ -1,6 +1,6 @@
 // Imports
 const fs = require("fs")
-const pa = require("path")
+const path = require("path")
 const mu = require("maia-util")
 // import PointSet from './PointSet'
 

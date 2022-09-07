@@ -12,7 +12,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 // Imports
 var fs = require("fs");
-var pa = require("path");
+var path = require("path");
 var mu = require("maia-util");
 // import PointSet from './PointSet'
 
