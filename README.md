@@ -68,4 +68,5 @@ TBD
 
 ## Release History
 
+* 0.0.4 Removed an outdated histogram operation.
 * 0.0.0-3 Initial release and bug fixes

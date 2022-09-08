@@ -378,12 +378,6 @@ export default class OntimePitchHasher {
       default:
         console.log("Should not get to default in match_hash_entries() switch.")
     }
-    for (const [key, value] of Object.entries(histogram)) {
-      let max = mu.max_argmax(value.map((v => {
-        return v.size
-      })))
-      histogram[key] = [max[0], (max[1] - 2625) * binSize]
-    }
 
     return {
       "nosHashes": nh,
