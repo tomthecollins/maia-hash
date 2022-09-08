@@ -235,7 +235,9 @@ var OntimePitchHasher = function () {
       return out.map(function (idx) {
         for (var _i2 = 0; _i2 < ctimes.length; _i2++) {
           if (idx * binSize <= ctimes[_i2]) {
-            return { "winPiece": fnams[_i2 - 1], "edge": idx * size, "count": countBins[idx] };
+            return {
+              "winningPiece": fnams[_i2 - 1], "edge": idx * binSize, "count": countBins[idx]
+            };
           }
         }
       });

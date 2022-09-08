@@ -218,7 +218,9 @@ export default class OntimePitchHasher {
     return out.map((idx) => {
       for (let i = 0; i < ctimes.length; i++){
         if (idx*binSize <= ctimes[i]){
-          return {"winPiece": fnams[i - 1], "edge": idx * size, "count": countBins[idx]}
+          return {
+            "winningPiece": fnams[i - 1], "edge": idx * binSize, "count": countBins[idx]
+          }
         }
       }
     })
