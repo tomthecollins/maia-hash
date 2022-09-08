@@ -211,6 +211,35 @@ var OntimePitchHasher = function () {
         "fnams": [fnam]
       };
     }
+
+    // This method is inefficient and could be improved. I don't think it's worth
+    // obtaining the name of each piece when most of the entries of countBins
+    // are zero. Therefore, I've sliced it to topN.
+
+  }, {
+    key: "get_piece_names",
+    value: function get_piece_names(countBins, ctimes, fnams, binSize) {
+      var topN = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : 100;
+
+      var out = [];
+      // "out" contains the index of bin,
+      // and it is sorted based on the corresponding number of hash entries contained in "hist".
+      for (var i = 0; i < countBins.length; i++) {
+        out.push(i);
+      }
+      out.sort(function (a, b) {
+        return countBins[b] - countBins[a];
+      });
+      out = out.slice(topN);
+
+      return out.map(function (idx) {
+        for (var _i2 = 0; _i2 < ctimes.length; _i2++) {
+          if (idx * binSize <= ctimes[_i2]) {
+            return { "winPiece": fnams[_i2 - 1], "edge": idx * size, "count": countBins[idx] };
+          }
+        }
+      });
+    }
   }, {
     key: "insert",
     value: function insert(hashEntry) {
@@ -340,9 +369,9 @@ var OntimePitchHasher = function () {
           break;
 
         case "triples":
-          loop1: for (var _i2 = 0; _i2 < npts - 2; _i2++) {
-            var _v3 = pts[_i2];
-            var _j2 = _i2 + 1;
+          loop1: for (var _i3 = 0; _i3 < npts - 2; _i3++) {
+            var _v3 = pts[_i3];
+            var _j2 = _i3 + 1;
             while (_j2 < npts - 1) {
               var _v4 = pts[_j2];
               var td1 = _v4[0] - _v3[0];

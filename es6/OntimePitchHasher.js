@@ -200,6 +200,31 @@ export default class OntimePitchHasher {
   }
 
 
+  // This method is inefficient and could be improved. I don't think it's worth
+  // obtaining the name of each piece when most of the entries of countBins
+  // are zero. Therefore, I've sliced it to topN.
+  get_piece_names(countBins, ctimes, fnams, binSize, topN = 100){
+    let out = []
+    // "out" contains the index of bin,
+    // and it is sorted based on the corresponding number of hash entries contained in "hist".
+    for (let i = 0; i < countBins.length; i++) {
+      out.push(i)
+    }
+    out.sort(function (a, b) {
+      return countBins[b] - countBins[a]
+    })
+    out = out.slice(topN)
+
+    return out.map((idx) => {
+      for (let i = 0; i < ctimes.length; i++){
+        if (idx*binSize <= ctimes[i]){
+          return {"winPiece": fnams[i - 1], "edge": idx * size, "count": countBins[idx]}
+        }
+      }
+    })
+  }
+
+
   insert(hashEntry, method = "hash and lookup", dir) {
     const key = hashEntry.hash
     const lookup = this.contains(key)
