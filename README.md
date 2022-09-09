@@ -68,5 +68,5 @@ TBD
 
 ## Release History
 
-* 0.0.4-6 Renamed an outdated histogram operation to get_piece_names().
+* 0.0.4-7 Renamed an outdated histogram operation to get_piece_names().
 * 0.0.0-3 Initial release and bug fixes

@@ -216,7 +216,7 @@ var mf = (function () {
       out.sort(function (a, b) {
         return countBins[b] - countBins[a]
       });
-      out = out.slice(topN);
+      out = out.slice(0, topN);
 
       return out.map((idx) => {
         for (let i = 0; i < ctimes.length; i++){
@@ -426,7 +426,7 @@ var mf = (function () {
    * Algorithms, Inc. in various applications that we have produced or are
    * developing currently.
    *
-   * @version 0.0.6
+   * @version 0.0.7
    * @author Tom Collins
    * @copyright 2022
    *

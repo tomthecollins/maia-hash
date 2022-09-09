@@ -213,7 +213,7 @@ export default class OntimePitchHasher {
     out.sort(function (a, b) {
       return countBins[b] - countBins[a]
     })
-    out = out.slice(topN)
+    out = out.slice(0, topN)
 
     return out.map((idx) => {
       for (let i = 0; i < ctimes.length; i++){

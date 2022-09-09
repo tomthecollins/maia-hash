@@ -230,7 +230,7 @@ var OntimePitchHasher = function () {
       out.sort(function (a, b) {
         return countBins[b] - countBins[a];
       });
-      out = out.slice(topN);
+      out = out.slice(0, topN);
 
       return out.map(function (idx) {
         for (var _i2 = 0; _i2 < ctimes.length; _i2++) {
