@@ -3,11 +3,15 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.OntimePitchHasher = undefined;
+exports.HasherNoConcat = exports.OntimePitchHasher = undefined;
 
 var _OntimePitchHasher = require('./OntimePitchHasher');
 
 var _OntimePitchHasher2 = _interopRequireDefault(_OntimePitchHasher);
+
+var _HasherNoConcat = require('./HasherNoConcat');
+
+var _HasherNoConcat2 = _interopRequireDefault(_HasherNoConcat);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -17,10 +21,6 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 //   aarden_key_profiles as aarden_key_profiles_default,
 //   krumhansl_and_kessler_key_profiles as krumhansl_and_kessler_key_profiles_default
 // } from './util_key'
-
-
-var OntimePitchHasher = exports.OntimePitchHasher = _OntimePitchHasher2.default;
-// export const Grid = Grid_default
 
 
 /**
@@ -36,8 +36,14 @@ var OntimePitchHasher = exports.OntimePitchHasher = _OntimePitchHasher2.default;
  *
  */
 
+var OntimePitchHasher = exports.OntimePitchHasher = _OntimePitchHasher2.default;
+var HasherNoConcat = exports.HasherNoConcat = _HasherNoConcat2.default;
+// export const Grid = Grid_default
+
+
 exports.default = {
-  OntimePitchHasher: OntimePitchHasher
+  OntimePitchHasher: OntimePitchHasher,
+  HasherNoConcat: HasherNoConcat
   // Grid,
 
 };

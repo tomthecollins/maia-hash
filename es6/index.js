@@ -12,6 +12,7 @@
  */
 
 import OntimePitchHasher_default from './OntimePitchHasher'
+import HasherNoConcat_default from './HasherNoConcat'
 // import Grid_default from './Grid'
 // import {
 //   fifth_steps_mode as fifth_steps_mode_default,
@@ -21,11 +22,13 @@ import OntimePitchHasher_default from './OntimePitchHasher'
 
 
 export const OntimePitchHasher = OntimePitchHasher_default
+export const HasherNoConcat = HasherNoConcat_default
 // export const Grid = Grid_default
 
 
 export default {
   OntimePitchHasher,
+  HasherNoConcat,
   // Grid,
 
 }

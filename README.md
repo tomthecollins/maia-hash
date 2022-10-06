@@ -46,6 +46,9 @@ Please follow these steps when making additions or changes:
 1. Additions or changes to the code should be made in the es6 folder;
 2. When documenting, follow the JSDoc format used therein;
 3. Write unit tests below each method/function;
+4. Edit es6 -> index.js so that any new classes are included in the compile;
+5. Update package.json -> version field;
+6.
 4. Execute `npm run compile` to convert the various components in the es6 into the corresponding components in the dist folder, and to combine them into an IIFE (called maia-hash.js, in the root of the repository);
 5. Execute `jsdoc --configure .jsdoc.config.js dist` to update the documentation, which gets written to the docs folder, and check it looks good and reads well;
 6. Say in step 1 you added a new file to the es6 folder called hello_world.js, then now it's time to check on your unit tests by executing `node hello_world.js` and seeing whether the `console.log()`s match your expected output;
@@ -68,5 +71,6 @@ TBD
 
 ## Release History
 
+* 0.0.8-12 Experimenting with no concatenation.
 * 0.0.4-7 Renamed an outdated histogram operation to get_piece_names().
 * 0.0.0-3 Initial release and bug fixes
