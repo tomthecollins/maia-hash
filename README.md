@@ -48,12 +48,9 @@ Please follow these steps when making additions or changes:
 3. Write unit tests below each method/function;
 4. Edit es6 -> index.js so that any new classes are included in the compile;
 5. Update package.json -> version field;
-6.
-4. Execute `npm run compile` to convert the various components in the es6 into the corresponding components in the dist folder, and to combine them into an IIFE (called maia-hash.js, in the root of the repository);
-5. Execute `jsdoc --configure .jsdoc.config.js dist` to update the documentation, which gets written to the docs folder, and check it looks good and reads well;
-6. Say in step 1 you added a new file to the es6 folder called hello_world.js, then now it's time to check on your unit tests by executing `node hello_world.js` and seeing whether the `console.log()`s match your expected output;
-7. Once you are satisfied with your unit tests, comment them out and paste them to test/index.js, following the chai format used therein. Execute `npm test` to verify that there are ticks everywhere and in particular that your new tests are being invoked;
-8. Do the usual `git add .`, `git commit -m "Short meaningful message"`, and `git push`, and we'll see it on the other side as a pull request;
+6. Execute `npm run compile` to convert the various components in the es6 into the corresponding components in the dist folder, and to combine them into an IIFE (called maia-hash.js, in the root of the repository);
+7. Do the usual `git add .`, `git commit -m "Short meaningful message"`, `git tag v0.0.??`, `git push origin v0.0.8`, and `git push`, and we'll see it on the other side as a pull request;
+8. `npm publish`
 9. There should not be any need for you to edit the version in package.json;
 10. Please keep any data files out of the repository by editing the .gitignore file.
 
