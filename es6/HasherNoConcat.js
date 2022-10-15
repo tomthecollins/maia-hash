@@ -45,7 +45,7 @@ export default class HasherNoConcat {
               // Make a hash entry, something like "±pdtd"
               const he = this.create_hash_entry(
                 [v1[1] - v0[1], td], mode,
-                cumuTime + v0[0], fnam,
+                v0[0], fnam,
                 tMin, tMax
               )
               this.insert(he)
@@ -81,7 +81,7 @@ export default class HasherNoConcat {
                   // Make a hash entry, something like "±pd1±pd2tdr"
                   const he = this.create_hash_entry(
                     [v1[1] - v0[1], v2[1] - v1[1], td2 / td1], mode,
-                    cumuTime + v0[0], fnam,
+                    v0[0], fnam,
                     tMin, tMax
                   )
                   this.insert(he, insertMode, folder)

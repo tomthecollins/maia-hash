@@ -63,7 +63,7 @@ var HasherNoConcat = function () {
               // Decide whether to make a hash entry.
               if (td > tMin && td < tMax && apd >= pMin && apd <= pMax) {
                 // Make a hash entry, something like "±pdtd"
-                var he = this.create_hash_entry([v1[1] - v0[1], td], mode, cumuTime + v0[0], fnam, tMin, tMax);
+                var he = this.create_hash_entry([v1[1] - v0[1], td], mode, v0[0], fnam, tMin, tMax);
                 this.insert(he);
                 nh++;
               } // End whether to make a hash entry.
@@ -95,7 +95,7 @@ var HasherNoConcat = function () {
                   // Decide whether to make a hash entry.
                   if (td2 > tMin && td2 < tMax && apd2 >= pMin && apd2 <= pMax) {
                     // Make a hash entry, something like "±pd1±pd2tdr"
-                    var _he = this.create_hash_entry([_v2[1] - _v[1], v2[1] - _v2[1], td2 / td1], mode, cumuTime + _v[0], fnam, tMin, tMax);
+                    var _he = this.create_hash_entry([_v2[1] - _v[1], v2[1] - _v2[1], td2 / td1], mode, _v[0], fnam, tMin, tMax);
                     this.insert(_he, insertMode, folder);
                     nh++;
                   } // End whether to make a hash entry.
