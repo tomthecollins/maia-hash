@@ -300,14 +300,16 @@ export default class HasherNoConcat {
   // The expected format is with time in the first dimension and pitch in the
   // second dimension of pts. It is assumed that pts is sorted
   // lexicographically.
+  // use "ctimes" as the max length of music in a dataset.
   match_hash_entries(
     pts, mode = "duples", tMin, tMax, pMin, pMax, ctimes, binSize, folder = __dirname
   ) {
     let uninh = new Set()
     const bins = Math.ceil(ctimes[ctimes.length - 1] / binSize);
-    let countBins = new Array(bins).fill(0).map(() => {
-      return new Set()
-    })
+    let countBins = new Map()
+    // let countBin = new Array(bins).fill(0).map(() => {
+    //   return new Set()
+    // }) 
     pts = pts.slice(0, 80)
     const npts = pts.length
     let nh = 0
@@ -376,12 +378,21 @@ export default class HasherNoConcat {
                         path.join(folder, he.hash + ".json"), "utf8"
                       ).slice(0, -1)
                       let lookup = JSON.parse("[" + lookupStr + "]")
-                      lookup.forEach((value) => {
-                        let dif = value - he.ctimes[0]
-                        if (dif >= 0 && dif <= ctimes[ctimes.length - 1]) {
-                          countBins[Math.floor(dif / binSize)].add(he.hash)
+                      lookup.forEach(function(item){
+                        let tmp_fname = item[1]
+                        let tmp_ontime = item[0]
+                        // create a new countBin when a new music with quired hash appears.
+                        if(!countBins.has(tmp_fname)){
+                          countBins.set(tmp_fname, new Array(bins).fill(0).map(() => {return new Set()}))
                         }
+                        countBins.get(tmp_fname)[Math.floor(tmp_ontime / binSize)].add(he.hash)
                       })
+                      // lookup.forEach((value) => {
+                      //   let dif = value - he.ctimes[0]
+                      //   if (dif >= 0 && dif <= ctimes[ctimes.length - 1]) {
+                      //     countBins[Math.floor(dif / binSize)].add(he.hash)
+                      //   }
+                      // })
                     }
                     uninh.add(he.hash)
                     nh++
@@ -405,13 +416,21 @@ export default class HasherNoConcat {
       default:
         console.log("Should not get to default in match_hash_entries() switch.")
     }
+    // calculate size of each bin here
+    let keys = countBins.keys()
+    for(key of keys){
+      countBins.set(key, countBins.get(key).map((value => {
+        return value.size
+      })))
+    }
 
     return {
       "nosHashes": nh,
       "uninosHashes": uninh.size,
-      "countBins": countBins.map((value => {
-        return value.size
-      }))
+      "countBins": countBins
+      // "countBins": countBins.map((value => {
+      //   return value.size
+      // }))
     }
   }
 }

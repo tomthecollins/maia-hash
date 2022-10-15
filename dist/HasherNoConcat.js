@@ -309,6 +309,7 @@ var HasherNoConcat = function () {
     // The expected format is with time in the first dimension and pitch in the
     // second dimension of pts. It is assumed that pts is sorted
     // lexicographically.
+    // use "ctimes" as the max length of music in a dataset.
 
   }, {
     key: "match_hash_entries",
@@ -327,9 +328,10 @@ var HasherNoConcat = function () {
 
       var uninh = new Set();
       var bins = Math.ceil(ctimes[ctimes.length - 1] / binSize);
-      var countBins = new Array(bins).fill(0).map(function () {
-        return new Set();
-      });
+      var countBins = new Map();
+      // let countBin = new Array(bins).fill(0).map(() => {
+      //   return new Set()
+      // }) 
       pts = pts.slice(0, 80);
       var npts = pts.length;
       var nh = 0;
@@ -394,12 +396,23 @@ var HasherNoConcat = function () {
                       if (fs.existsSync(path.join(folder, he.hash + ".json"))) {
                         var lookupStr = fs.readFileSync(path.join(folder, he.hash + ".json"), "utf8").slice(0, -1);
                         var lookup = JSON.parse("[" + lookupStr + "]");
-                        lookup.forEach(function (value) {
-                          var dif = value - he.ctimes[0];
-                          if (dif >= 0 && dif <= ctimes[ctimes.length - 1]) {
-                            countBins[Math.floor(dif / binSize)].add(he.hash);
+                        lookup.forEach(function (item) {
+                          var tmp_fname = item[1];
+                          var tmp_ontime = item[0];
+                          // create a new countBin when a new music with quired hash appears.
+                          if (!countBins.has(tmp_fname)) {
+                            countBins.set(tmp_fname, new Array(bins).fill(0).map(function () {
+                              return new Set();
+                            }));
                           }
+                          countBins.get(tmp_fname)[Math.floor(tmp_ontime / binSize)].add(he.hash);
                         });
+                        // lookup.forEach((value) => {
+                        //   let dif = value - he.ctimes[0]
+                        //   if (dif >= 0 && dif <= ctimes[ctimes.length - 1]) {
+                        //     countBins[Math.floor(dif / binSize)].add(he.hash)
+                        //   }
+                        // })
                       }
                       uninh.add(he.hash);
                       nh++;
@@ -426,13 +439,42 @@ var HasherNoConcat = function () {
         default:
           console.log("Should not get to default in match_hash_entries() switch.");
       }
+      // calculate size of each bin here
+      var keys = countBins.keys();
+      var _iteratorNormalCompletion = true;
+      var _didIteratorError = false;
+      var _iteratorError = undefined;
+
+      try {
+        for (var _iterator = keys[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+          key = _step.value;
+
+          countBins.set(key, countBins.get(key).map(function (value) {
+            return value.size;
+          }));
+        }
+      } catch (err) {
+        _didIteratorError = true;
+        _iteratorError = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion && _iterator.return) {
+            _iterator.return();
+          }
+        } finally {
+          if (_didIteratorError) {
+            throw _iteratorError;
+          }
+        }
+      }
 
       return {
         "nosHashes": nh,
         "uninosHashes": uninh.size,
-        "countBins": countBins.map(function (value) {
-          return value.size;
-        })
+        "countBins": countBins
+        // "countBins": countBins.map((value => {
+        //   return value.size
+        // }))
       };
     }
   }]);
