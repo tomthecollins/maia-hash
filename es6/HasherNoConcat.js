@@ -203,6 +203,8 @@ export default class HasherNoConcat {
   // This method is inefficient and could be improved. I don't think it's worth
   // obtaining the name of each piece when most of the entries of countBins
   // are zero. Therefore, I've sliced it to topN.
+  // * the "fnams" here are file names involved in countBins.
+  // * use "ctimes" as the max length of a piece of music in a dataset.
   get_piece_names(countBins, ctimes, fnams, binSize, topN = 100){
     let out = []
     // "out" contains the index of bin,
@@ -216,13 +218,17 @@ export default class HasherNoConcat {
     out = out.slice(0, topN)
 
     return out.map((idx) => {
-      for (let i = 0; i < ctimes.length; i++){
-        if (idx*binSize <= ctimes[i]){
-          return {
-            "winningPiece": fnams[i - 1], "edge": idx * binSize, "count": countBins[idx]
-          }
-        }
+      let idxFnams = parseInt(idx/ctimes)
+      return{
+        "winningPiece": fnams[idxFnams], "edge": idx * binSize, "count": countBins[idx]
       }
+      // for (let i = 0; i < fnams.length; i++){
+      //   if (idx*binSize <= ctimes[i]){
+      //     return {
+      //       "winningPiece": fnams[i - 1], "edge": idx * binSize, "count": countBins[idx]
+      //     }
+      //   }
+      // }
     })
   }
 
@@ -300,7 +306,7 @@ export default class HasherNoConcat {
   // The expected format is with time in the first dimension and pitch in the
   // second dimension of pts. It is assumed that pts is sorted
   // lexicographically.
-  // use "ctimes" as the max length of music in a dataset.
+  // * use "ctimes" as the max length of a piece of music in a dataset.
   match_hash_entries(
     pts, mode = "duples", tMin, tMax, pMin, pMax, ctimes, binSize, folder = __dirname
   ) {
@@ -385,7 +391,7 @@ export default class HasherNoConcat {
                         if(!countBins.has(tmp_fname)){
                           countBins.set(tmp_fname, new Array(bins).fill(0).map(() => {return new Set()}))
                         }
-                        countBins.get(tmp_fname)[Math.floor(tmp_ontime / binSize)].add(he.hash)
+                        countBins.set(tmp_fname, countBins.get(tmp_fname)[Math.floor(tmp_ontime / binSize)].add(he.hash))
                       })
                       // lookup.forEach((value) => {
                       //   let dif = value - he.ctimes[0]
@@ -418,19 +424,26 @@ export default class HasherNoConcat {
     }
     // calculate size of each bin here
     let keys = countBins.keys()
+    let fnames = []
+    let listCountBins = []
     for(key of keys){
-      countBins.set(key, countBins.get(key).map((value => {
+      // countBins.set(key, countBins.get(key).map((value => {
+      //   return value.size
+      // })))
+      listCountBins = listCountBins.concat(countBins.get(key).map((value => {
         return value.size
       })))
+      fnames.push(key)
     }
 
     return {
       "nosHashes": nh,
       "uninosHashes": uninh.size,
-      "countBins": countBins
+      "countBins": listCountBins,
       // "countBins": countBins.map((value => {
       //   return value.size
       // }))
+      "fnamesCountBins": fnames
     }
   }
 }
