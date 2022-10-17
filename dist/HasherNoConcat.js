@@ -315,7 +315,7 @@ var HasherNoConcat = function () {
     // The expected format is with time in the first dimension and pitch in the
     // second dimension of pts. It is assumed that pts is sorted
     // lexicographically.
-    // use "ctimes" as the max length of a piece of music in a dataset.
+    // * use "ctimes" as the max length of a piece of music in a dataset.
 
   }, {
     key: "match_hash_entries",

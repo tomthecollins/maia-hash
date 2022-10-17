@@ -49,7 +49,7 @@ Please follow these steps when making additions or changes:
 4. Edit es6 -> index.js so that any new classes are included in the compile;
 5. Update package.json -> version field;
 6. Execute `npm run compile` to convert the various components in the es6 into the corresponding components in the dist folder, and to combine them into an IIFE (called maia-hash.js, in the root of the repository);
-7. Do the usual `git add .`, `git commit -m "Short meaningful message"`, `git tag v0.0.??`, `git push origin v0.0.8`, and `git push`, and we'll see it on the other side as a pull request;
+7. Do the usual `git add .`, `git commit -m "Short meaningful message"`, `git tag v0.0.??`, `git push origin v0.0.9`, and `git push`, and we'll see it on the other side as a pull request;
 8. `npm publish`
 9. There should not be any need for you to edit the version in package.json;
 10. Please keep any data files out of the repository by editing the .gitignore file.
