@@ -392,10 +392,9 @@ export default class HasherNoConcat {
                           countBins.set(tmp_fname, new Array(bins).fill(0).map(() => {return new Set()}))
                         }
                         let index_now = Math.floor(tmp_ontime / binSize)
-                        let setArray = countBins.get(tmp_fname)[index_now]
+                        let setArray = countBins.get(tmp_fname)
                         let target = setArray[index_now]
                         target.add(he.hash)
-                        // countBins.set(tmp_fname, setArray)
                       })
                       // lookup.forEach((value) => {
                       //   let dif = value - he.ctimes[0]
@@ -427,10 +426,10 @@ export default class HasherNoConcat {
         console.log("Should not get to default in match_hash_entries() switch.")
     }
     // calculate size of each bin here
-    let keys = countBins.keys()
+    // let keys = countBins.keys()
     let fnames = []
     let listCountBins = []
-    for(key of keys){
+    for(let key of countBins.keys()){
       // countBins.set(key, countBins.get(key).map((value => {
       //   return value.size
       // })))

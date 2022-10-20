@@ -412,10 +412,9 @@ var HasherNoConcat = function () {
                             }));
                           }
                           var index_now = Math.floor(tmp_ontime / binSize);
-                          var setArray = countBins.get(tmp_fname)[index_now];
+                          var setArray = countBins.get(tmp_fname);
                           var target = setArray[index_now];
                           target.add(he.hash);
-                          // countBins.set(tmp_fname, setArray)
                         });
                         // lookup.forEach((value) => {
                         //   let dif = value - he.ctimes[0]
@@ -450,7 +449,7 @@ var HasherNoConcat = function () {
           console.log("Should not get to default in match_hash_entries() switch.");
       }
       // calculate size of each bin here
-      var keys = countBins.keys();
+      // let keys = countBins.keys()
       var fnames = [];
       var listCountBins = [];
       var _iteratorNormalCompletion = true;
@@ -458,8 +457,8 @@ var HasherNoConcat = function () {
       var _iteratorError = undefined;
 
       try {
-        for (var _iterator = keys[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-          key = _step.value;
+        for (var _iterator = countBins.keys()[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+          var key = _step.value;
 
           // countBins.set(key, countBins.get(key).map((value => {
           //   return value.size
