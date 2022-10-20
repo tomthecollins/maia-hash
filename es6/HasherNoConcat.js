@@ -391,7 +391,11 @@ export default class HasherNoConcat {
                         if(!countBins.has(tmp_fname)){
                           countBins.set(tmp_fname, new Array(bins).fill(0).map(() => {return new Set()}))
                         }
-                        countBins.set(tmp_fname, countBins.get(tmp_fname)[Math.floor(tmp_ontime / binSize)].add(he.hash))
+                        let index_now = Math.floor(tmp_ontime / binSize)
+                        let setArray = countBins.get(tmp_fname)[index_now]
+                        let target = setArray[index_now]
+                        target.add(he.hash)
+                        // countBins.set(tmp_fname, setArray)
                       })
                       // lookup.forEach((value) => {
                       //   let dif = value - he.ctimes[0]

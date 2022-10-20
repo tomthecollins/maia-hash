@@ -411,7 +411,11 @@ var HasherNoConcat = function () {
                               return new Set();
                             }));
                           }
-                          countBins.set(tmp_fname, countBins.get(tmp_fname)[Math.floor(tmp_ontime / binSize)].add(he.hash));
+                          var index_now = Math.floor(tmp_ontime / binSize);
+                          var setArray = countBins.get(tmp_fname)[index_now];
+                          var target = setArray[index_now];
+                          target.add(he.hash);
+                          // countBins.set(tmp_fname, setArray)
                         });
                         // lookup.forEach((value) => {
                         //   let dif = value - he.ctimes[0]

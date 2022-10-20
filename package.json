@@ -1,8 +1,8 @@
 {
   "name": "maia-hash",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "description": "Hashing and fingerprinting functions supporting various applications by Music Artificial Intelligence Algorithms, Inc.",
-  "type": "module",
+  "type": "commonjs",
   "main": "dist/index.js",
   "jsnext:main": "es6/index.js",
   "module": "es6/index.js",
