@@ -216,7 +216,7 @@ var HasherNoConcat = function () {
     // obtaining the name of each piece when most of the entries of countBins
     // are zero. Therefore, I've sliced it to topN.
     // * the "fnams" here are file names involved in countBins.
-    // * use "ctimes" as the max length of a piece of music in a dataset.
+    // ctimes: the max ontime of each piece of music in a dataset.
 
   }, {
     key: "get_piece_names",
@@ -235,17 +235,17 @@ var HasherNoConcat = function () {
       out = out.slice(0, topN);
 
       return out.map(function (idx) {
-        var idxFnams = parseInt(idx / ctimes);
-        return {
-          "winningPiece": fnams[idxFnams], "edge": idx * binSize, "count": countBins[idx]
-          // for (let i = 0; i < fnams.length; i++){
-          //   if (idx*binSize <= ctimes[i]){
-          //     return {
-          //       "winningPiece": fnams[i - 1], "edge": idx * binSize, "count": countBins[idx]
-          //     }
-          //   }
-          // }
-        };
+        // let idxFnams = parseInt(idx/ctimes)
+        // return{
+        //   "winningPiece": fnams[idxFnams], "edge": idx * binSize, "count": countBins[idx]
+        // }
+        for (var _i2 = 0; _i2 < fnams.length; _i2++) {
+          if (idx <= ctimes[_i2]) {
+            return {
+              "winningPiece": fnams[_i2], "edge": idx, "count": countBins[idx]
+            };
+          }
+        }
       });
     }
   }, {
@@ -315,7 +315,7 @@ var HasherNoConcat = function () {
     // The expected format is with time in the first dimension and pitch in the
     // second dimension of pts. It is assumed that pts is sorted
     // lexicographically.
-    // * use "ctimes" as the max length of a piece of music in a dataset.
+    // maxOntimes: the max ontime of each piece of music in a dataset.
 
   }, {
     key: "match_hash_entries",
@@ -325,7 +325,7 @@ var HasherNoConcat = function () {
       var tMax = arguments[3];
       var pMin = arguments[4];
       var pMax = arguments[5];
-      var ctimes = arguments[6];
+      var maxOntimes = arguments[6];
 
       var _this = this;
 
@@ -333,7 +333,7 @@ var HasherNoConcat = function () {
       var folder = arguments.length > 8 && arguments[8] !== undefined ? arguments[8] : __dirname;
 
       var uninh = new Set();
-      var bins = Math.ceil(ctimes[ctimes.length - 1] / binSize);
+      // const bins = Math.ceil(maxOntimes[maxOntimes.length - 1] / binSize);
       var countBins = new Map();
       // let countBin = new Array(bins).fill(0).map(() => {
       //   return new Set()
@@ -379,9 +379,9 @@ var HasherNoConcat = function () {
           break;
 
         case "triples":
-          loop1: for (var _i2 = 0; _i2 < npts - 2; _i2++) {
-            var _v3 = pts[_i2];
-            var _j2 = _i2 + 1;
+          loop1: for (var _i3 = 0; _i3 < npts - 2; _i3++) {
+            var _v3 = pts[_i3];
+            var _j2 = _i3 + 1;
             while (_j2 < npts - 1) {
               var _v4 = pts[_j2];
               var td1 = _v4[0] - _v3[0];
@@ -407,6 +407,7 @@ var HasherNoConcat = function () {
                           var tmp_ontime = item[0];
                           // create a new countBin when a new music with quired hash appears.
                           if (!countBins.has(tmp_fname)) {
+                            var bins = Math.ceil(maxOntimes[tmp_fname] / binSize);
                             countBins.set(tmp_fname, new Array(bins).fill(0).map(function () {
                               return new Set();
                             }));
@@ -416,12 +417,6 @@ var HasherNoConcat = function () {
                           var target = setArray[index_now];
                           target.add(he.hash);
                         });
-                        // lookup.forEach((value) => {
-                        //   let dif = value - he.ctimes[0]
-                        //   if (dif >= 0 && dif <= ctimes[ctimes.length - 1]) {
-                        //     countBins[Math.floor(dif / binSize)].add(he.hash)
-                        //   }
-                        // })
                       }
                       uninh.add(he.hash);
                       nh++;
@@ -452,6 +447,7 @@ var HasherNoConcat = function () {
       // let keys = countBins.keys()
       var fnames = [];
       var listCountBins = [];
+      var ctimes = [];
       var _iteratorNormalCompletion = true;
       var _didIteratorError = false;
       var _iteratorError = undefined;
@@ -466,6 +462,12 @@ var HasherNoConcat = function () {
           listCountBins = listCountBins.concat(countBins.get(key).map(function (value) {
             return value.size;
           }));
+          var tmpCtime = maxOntimes[key];
+          if (ctimes.length == 0) {
+            ctimes.push(tmpCtime);
+          } else {
+            ctimes.push(tmpCtime + ctimes[ctimes.length - 1]);
+          }
           fnames.push(key);
         }
       } catch (err) {
@@ -487,10 +489,8 @@ var HasherNoConcat = function () {
         "nosHashes": nh,
         "uninosHashes": uninh.size,
         "countBins": listCountBins,
-        // "countBins": countBins.map((value => {
-        //   return value.size
-        // }))
-        "fnamesCountBins": fnames
+        "fnamesCountBins": fnames,
+        "ctimes": ctimes
       };
     }
   }]);

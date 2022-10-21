@@ -625,7 +625,7 @@ var mf = (function () {
     // obtaining the name of each piece when most of the entries of countBins
     // are zero. Therefore, I've sliced it to topN.
     // * the "fnams" here are file names involved in countBins.
-    // * use "ctimes" as the max length of a piece of music in a dataset.
+    // ctimes: the max ontime of each piece of music in a dataset.
     get_piece_names(countBins, ctimes, fnams, binSize, topN = 100){
       let out = [];
       // "out" contains the index of bin,
@@ -639,17 +639,17 @@ var mf = (function () {
       out = out.slice(0, topN);
 
       return out.map((idx) => {
-        let idxFnams = parseInt(idx/ctimes);
-        return {
-          "winningPiece": fnams[idxFnams], "edge": idx * binSize, "count": countBins[idx]
-        }
-        // for (let i = 0; i < fnams.length; i++){
-        //   if (idx*binSize <= ctimes[i]){
-        //     return {
-        //       "winningPiece": fnams[i - 1], "edge": idx * binSize, "count": countBins[idx]
-        //     }
-        //   }
+        // let idxFnams = parseInt(idx/ctimes)
+        // return{
+        //   "winningPiece": fnams[idxFnams], "edge": idx * binSize, "count": countBins[idx]
         // }
+        for (let i = 0; i < fnams.length; i++){
+          if (idx <= ctimes[i]){
+            return {
+              "winningPiece": fnams[i], "edge": idx, "count": countBins[idx]
+            }
+          }
+        }
       })
     }
 
@@ -727,12 +727,12 @@ var mf = (function () {
     // The expected format is with time in the first dimension and pitch in the
     // second dimension of pts. It is assumed that pts is sorted
     // lexicographically.
-    // * use "ctimes" as the max length of a piece of music in a dataset.
+    // maxOntimes: the max ontime of each piece of music in a dataset.
     match_hash_entries(
-      pts, mode = "duples", tMin, tMax, pMin, pMax, ctimes, binSize, folder = __dirname
+      pts, mode = "duples", tMin, tMax, pMin, pMax, maxOntimes, binSize, folder = __dirname
     ) {
       let uninh = new Set();
-      const bins = Math.ceil(ctimes[ctimes.length - 1] / binSize);
+      // const bins = Math.ceil(maxOntimes[maxOntimes.length - 1] / binSize);
       let countBins = new Map();
       // let countBin = new Array(bins).fill(0).map(() => {
       //   return new Set()
@@ -810,6 +810,7 @@ var mf = (function () {
                           let tmp_ontime = item[0];
                           // create a new countBin when a new music with quired hash appears.
                           if(!countBins.has(tmp_fname)){
+                            const bins = Math.ceil(maxOntimes[tmp_fname] / binSize);
                             countBins.set(tmp_fname, new Array(bins).fill(0).map(() => {return new Set()}));
                           }
                           let index_now = Math.floor(tmp_ontime / binSize);
@@ -817,12 +818,6 @@ var mf = (function () {
                           let target = setArray[index_now];
                           target.add(he.hash);
                         });
-                        // lookup.forEach((value) => {
-                        //   let dif = value - he.ctimes[0]
-                        //   if (dif >= 0 && dif <= ctimes[ctimes.length - 1]) {
-                        //     countBins[Math.floor(dif / binSize)].add(he.hash)
-                        //   }
-                        // })
                       }
                       uninh.add(he.hash);
                       nh++;
@@ -850,6 +845,7 @@ var mf = (function () {
       // let keys = countBins.keys()
       let fnames = [];
       let listCountBins = [];
+      let ctimes = [];
       for(let key of countBins.keys()){
         // countBins.set(key, countBins.get(key).map((value => {
         //   return value.size
@@ -857,6 +853,13 @@ var mf = (function () {
         listCountBins = listCountBins.concat(countBins.get(key).map((value => {
           return value.size
         })));
+        let tmpCtime = maxOntimes[key];
+        if (ctimes.length == 0){
+          ctimes.push(tmpCtime);
+        }
+        else {
+          ctimes.push(tmpCtime+ctimes[ctimes.length-1]);
+        }
         fnames.push(key);
       }
 
@@ -864,10 +867,8 @@ var mf = (function () {
         "nosHashes": nh,
         "uninosHashes": uninh.size,
         "countBins": listCountBins,
-        // "countBins": countBins.map((value => {
-        //   return value.size
-        // }))
-        "fnamesCountBins": fnames
+        "fnamesCountBins": fnames,
+        "ctimes": ctimes
       }
     }
   }
