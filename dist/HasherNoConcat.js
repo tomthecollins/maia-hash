@@ -220,32 +220,33 @@ var HasherNoConcat = function () {
 
   }, {
     key: "get_piece_names",
-    value: function get_piece_names(countBins, ctimes, fnams, binSize) {
-      var topN = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : 100;
+    value: function get_piece_names(countBins, binSize) {
+      var topN = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 100;
 
       var out = [];
+
+      countBins.forEach(function (value, key) {
+        var pieceHist = countBins.get(key);
+        pieceHist.forEach(function (setSize, idx) {
+          out.push({
+            "pieceId": key,
+            "index": idx,
+            "setSize": setSize
+          });
+        });
+      });
+
       // "out" contains the index of bin,
       // and it is sorted based on the corresponding number of hash entries contained in "hist".
-      for (var i = 0; i < countBins.length; i++) {
-        out.push(i);
-      }
       out.sort(function (a, b) {
-        return countBins[b] - countBins[a];
+        return b.setSize - a.setSize;
       });
       out = out.slice(0, topN);
 
-      return out.map(function (idx) {
-        // let idxFnams = parseInt(idx/ctimes)
-        // return{
-        //   "winningPiece": fnams[idxFnams], "edge": idx * binSize, "count": countBins[idx]
-        // }
-        for (var _i2 = 0; _i2 < fnams.length; _i2++) {
-          if (idx <= ctimes[_i2]) {
-            return {
-              "winningPiece": fnams[_i2], "edge": idx, "count": countBins[idx]
-            };
-          }
-        }
+      return out.map(function (entry) {
+        return {
+          "winningPiece": entry.pieceId, "edge": entry.index * binSize, "count": entry.setSize
+        };
       });
     }
   }, {
@@ -379,9 +380,9 @@ var HasherNoConcat = function () {
           break;
 
         case "triples":
-          loop1: for (var _i3 = 0; _i3 < npts - 2; _i3++) {
-            var _v3 = pts[_i3];
-            var _j2 = _i3 + 1;
+          loop1: for (var _i2 = 0; _i2 < npts - 2; _i2++) {
+            var _v3 = pts[_i2];
+            var _j2 = _i2 + 1;
             while (_j2 < npts - 1) {
               var _v4 = pts[_j2];
               var td1 = _v4[0] - _v3[0];
@@ -412,10 +413,13 @@ var HasherNoConcat = function () {
                               return new Set();
                             }));
                           }
-                          var index_now = Math.floor(tmp_ontime / binSize);
-                          var setArray = countBins.get(tmp_fname);
-                          var target = setArray[index_now];
-                          target.add(he.hash);
+                          var dif = tmp_ontime - he.ctimes[0];
+                          if (dif >= 0 && dif <= maxOntimes[tmp_fname]) {
+                            var index_now = Math.floor(dif / binSize);
+                            var setArray = countBins.get(tmp_fname);
+                            var target = setArray[index_now];
+                            target.add(he.hash);
+                          }
                         });
                       }
                       uninh.add(he.hash);
@@ -443,11 +447,7 @@ var HasherNoConcat = function () {
         default:
           console.log("Should not get to default in match_hash_entries() switch.");
       }
-      // calculate size of each bin here
-      // let keys = countBins.keys()
-      var fnames = [];
-      var listCountBins = [];
-      var ctimes = [];
+
       var _iteratorNormalCompletion = true;
       var _didIteratorError = false;
       var _iteratorError = undefined;
@@ -456,19 +456,9 @@ var HasherNoConcat = function () {
         for (var _iterator = countBins.keys()[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
           var key = _step.value;
 
-          // countBins.set(key, countBins.get(key).map((value => {
-          //   return value.size
-          // })))
-          listCountBins = listCountBins.concat(countBins.get(key).map(function (value) {
+          countBins.set(key, countBins.get(key).map(function (value) {
             return value.size;
           }));
-          var tmpCtime = maxOntimes[key];
-          if (ctimes.length == 0) {
-            ctimes.push(tmpCtime);
-          } else {
-            ctimes.push(tmpCtime + ctimes[ctimes.length - 1]);
-          }
-          fnames.push(key);
         }
       } catch (err) {
         _didIteratorError = true;
@@ -488,9 +478,7 @@ var HasherNoConcat = function () {
       return {
         "nosHashes": nh,
         "uninosHashes": uninh.size,
-        "countBins": listCountBins,
-        "fnamesCountBins": fnames,
-        "ctimes": ctimes
+        "countBins": countBins
       };
     }
   }]);

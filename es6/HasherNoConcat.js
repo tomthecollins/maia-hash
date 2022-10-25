@@ -205,32 +205,36 @@ export default class HasherNoConcat {
   // are zero. Therefore, I've sliced it to topN.
   // * the "fnams" here are file names involved in countBins.
   // ctimes: the max ontime of each piece of music in a dataset.
-  get_piece_names(countBins, ctimes, fnams, binSize, topN = 100){
+  get_piece_names(countBins, binSize, topN = 100){
     let out = []
+
+    countBins.forEach(function(value, key){
+      const pieceHist = countBins.get(key)
+      pieceHist.forEach(function(setSize, idx){
+        out.push(
+          {
+            "pieceId": key,
+            "index": idx,
+            "setSize": setSize
+          }
+        )
+      })
+    })
+    
     // "out" contains the index of bin,
     // and it is sorted based on the corresponding number of hash entries contained in "hist".
-    for (let i = 0; i < countBins.length; i++) {
-      out.push(i)
-    }
     out.sort(function (a, b) {
-      return countBins[b] - countBins[a]
+      return b.setSize - a.setSize
     })
     out = out.slice(0, topN)
 
-    return out.map((idx) => {
-      // let idxFnams = parseInt(idx/ctimes)
-      // return{
-      //   "winningPiece": fnams[idxFnams], "edge": idx * binSize, "count": countBins[idx]
-      // }
-      for (let i = 0; i < fnams.length; i++){
-        if (idx <= ctimes[i]){
-          return {
-            "winningPiece": fnams[i], "edge": idx, "count": countBins[idx]
-          }
-        }
+    return out.map(function(entry){
+      return{
+        "winningPiece": entry.pieceId, "edge": entry.index * binSize, "count": entry.setSize
       }
     })
   }
+
 
 
   insert(hashEntry, method = "hash and lookup", dir) {
@@ -392,10 +396,13 @@ export default class HasherNoConcat {
                           const bins = Math.ceil(maxOntimes[tmp_fname] / binSize)
                           countBins.set(tmp_fname, new Array(bins).fill(0).map(() => {return new Set()}))
                         }
-                        let index_now = Math.floor(tmp_ontime / binSize)
-                        let setArray = countBins.get(tmp_fname)
-                        let target = setArray[index_now]
-                        target.add(he.hash)
+                        let dif = tmp_ontime - he.ctimes[0]
+                          if (dif >= 0 && dif <= maxOntimes[tmp_fname]) { 
+                            var index_now = Math.floor(dif / binSize);
+                            var setArray = countBins.get(tmp_fname);
+                            var target = setArray[index_now];
+                            target.add(he.hash);
+                        } 
                       })
                     }
                     uninh.add(he.hash)
@@ -420,34 +427,17 @@ export default class HasherNoConcat {
       default:
         console.log("Should not get to default in match_hash_entries() switch.")
     }
-    // calculate size of each bin here
-    // let keys = countBins.keys()
-    let fnames = []
-    let listCountBins = []
-    let ctimes = []
+
     for(let key of countBins.keys()){
-      // countBins.set(key, countBins.get(key).map((value => {
-      //   return value.size
-      // })))
-      listCountBins = listCountBins.concat(countBins.get(key).map((value => {
+      countBins.set(key, countBins.get(key).map((value => {
         return value.size
       })))
-      let tmpCtime = maxOntimes[key]
-      if (ctimes.length == 0){
-        ctimes.push(tmpCtime)
-      }
-      else{
-        ctimes.push(tmpCtime+ctimes[ctimes.length-1])
-      }
-      fnames.push(key)
     }
 
     return {
       "nosHashes": nh,
       "uninosHashes": uninh.size,
-      "countBins": listCountBins,
-      "fnamesCountBins": fnames,
-      "ctimes": ctimes
+      "countBins": countBins
     }
   }
 }
