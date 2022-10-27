@@ -212,11 +212,7 @@ var HasherNoConcat = function () {
       };
     }
 
-    // This method is inefficient and could be improved. I don't think it's worth
-    // obtaining the name of each piece when most of the entries of countBins
-    // are zero. Therefore, I've sliced it to topN.
-    // * the "fnams" here are file names involved in countBins.
-    // ctimes: the max ontime of each piece of music in a dataset.
+    // Obsolete
 
   }, {
     key: "get_piece_names",
@@ -327,18 +323,19 @@ var HasherNoConcat = function () {
       var pMin = arguments[4];
       var pMax = arguments[5];
       var maxOntimes = arguments[6];
+      var binSize = arguments[7];
 
       var _this = this;
 
-      var binSize = arguments[7];
       var folder = arguments.length > 8 && arguments[8] !== undefined ? arguments[8] : __dirname;
+      var topN = arguments.length > 9 && arguments[9] !== undefined ? arguments[9] : 100;
 
       var uninh = new Set();
       // const bins = Math.ceil(maxOntimes[maxOntimes.length - 1] / binSize);
       var countBins = new Map();
       // let countBin = new Array(bins).fill(0).map(() => {
       //   return new Set()
-      // }) 
+      // })
       pts = pts.slice(0, 80);
       var npts = pts.length;
       var nh = 0;
@@ -448,17 +445,40 @@ var HasherNoConcat = function () {
           console.log("Should not get to default in match_hash_entries() switch.");
       }
 
+      // Collect the topN matches. Will keep this sorted descending by setSize
+      // property.
+      var out = new Array(topN);
+      var jdx = 0; // Increment to populate out and throw away any unused entries.
       var _iteratorNormalCompletion = true;
       var _didIteratorError = false;
       var _iteratorError = undefined;
 
       try {
-        for (var _iterator = countBins.keys()[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+        var _loop = function _loop() {
           var key = _step.value;
 
-          countBins.set(key, countBins.get(key).map(function (value) {
+          var countBinsForPiece = countBins.get(key).map(function (value) {
             return value.size;
-          }));
+          });
+          countBinsForPiece.forEach(function (count, idx) {
+            if (jdx === 0 || // Nothing in it.
+            jdx < topN - 1 || // Still isn't full given value of topN.
+            count > out[jdx]["setSize"] // Bigger match than current minimum.
+            ) {
+                out[idx] = {
+                  "winningPiece": key,
+                  "edge": idx * binSize,
+                  "setSize": count
+                };
+                out.sort(function (a, b) {
+                  return b.setSize - a.setSize;
+                });
+              }
+          });
+        };
+
+        for (var _iterator = countBins.keys()[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+          _loop();
         }
       } catch (err) {
         _didIteratorError = true;
@@ -478,7 +498,7 @@ var HasherNoConcat = function () {
       return {
         "nosHashes": nh,
         "uninosHashes": uninh.size,
-        "countBins": countBins
+        "countBins": out
       };
     }
   }]);

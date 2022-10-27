@@ -200,11 +200,7 @@ export default class HasherNoConcat {
   }
 
 
-  // This method is inefficient and could be improved. I don't think it's worth
-  // obtaining the name of each piece when most of the entries of countBins
-  // are zero. Therefore, I've sliced it to topN.
-  // * the "fnams" here are file names involved in countBins.
-  // ctimes: the max ontime of each piece of music in a dataset.
+  // Obsolete
   get_piece_names(countBins, binSize, topN = 100){
     let out = []
 
@@ -220,7 +216,7 @@ export default class HasherNoConcat {
         )
       })
     })
-    
+
     // "out" contains the index of bin,
     // and it is sorted based on the corresponding number of hash entries contained in "hist".
     out.sort(function (a, b) {
@@ -312,14 +308,15 @@ export default class HasherNoConcat {
   // lexicographically.
   // maxOntimes: the max ontime of each piece of music in a dataset.
   match_hash_entries(
-    pts, mode = "duples", tMin, tMax, pMin, pMax, maxOntimes, binSize, folder = __dirname
+    pts, mode = "duples", tMin, tMax, pMin, pMax, maxOntimes, binSize,
+    folder = __dirname, topN = 100
   ) {
     let uninh = new Set()
     // const bins = Math.ceil(maxOntimes[maxOntimes.length - 1] / binSize);
     let countBins = new Map()
     // let countBin = new Array(bins).fill(0).map(() => {
     //   return new Set()
-    // }) 
+    // })
     pts = pts.slice(0, 80)
     const npts = pts.length
     let nh = 0
@@ -397,12 +394,12 @@ export default class HasherNoConcat {
                           countBins.set(tmp_fname, new Array(bins).fill(0).map(() => {return new Set()}))
                         }
                         let dif = tmp_ontime - he.ctimes[0]
-                          if (dif >= 0 && dif <= maxOntimes[tmp_fname]) { 
+                          if (dif >= 0 && dif <= maxOntimes[tmp_fname]) {
                             var index_now = Math.floor(dif / binSize);
                             var setArray = countBins.get(tmp_fname);
                             var target = setArray[index_now];
                             target.add(he.hash);
-                        } 
+                        }
                       })
                     }
                     uninh.add(he.hash)
@@ -428,16 +425,36 @@ export default class HasherNoConcat {
         console.log("Should not get to default in match_hash_entries() switch.")
     }
 
-    for(let key of countBins.keys()){
-      countBins.set(key, countBins.get(key).map((value => {
+    // Collect the topN matches. Will keep this sorted descending by setSize
+    // property.
+    const out = new Array(topN)
+    let jdx = 0 // Increment to populate out and throw away any unused entries.
+    for (let key of countBins.keys()){
+      const countBinsForPiece = countBins.get(key).map((value => {
         return value.size
-      })))
+      }))
+      countBinsForPiece.forEach(function(count, idx){
+        if (
+          jdx === 0 || // Nothing in it.
+          jdx < topN - 1 || // Still isn't full given value of topN.
+          count > out[jdx]["setSize"] // Bigger match than current minimum.
+        ){
+          out[idx] = {
+            "winningPiece": key,
+            "edge": idx*binSize,
+            "setSize": count
+          }
+          out.sort(function(a, b){
+            return b.setSize - a.setSize
+          })
+        }
+      })
     }
 
     return {
       "nosHashes": nh,
       "uninosHashes": uninh.size,
-      "countBins": countBins
+      "countBins": out
     }
   }
 }

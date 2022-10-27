@@ -2,12 +2,12 @@ var mf = (function () {
   'use strict';
 
   // Imports
-  const fs$1 = require("fs");
-  const path$1 = require("path");
-  require("maia-util");
+  const fs = require("fs");
+  const path = require("path");
+  const mu = require("maia-util");
   // import PointSet from './PointSet'
 
-  class OntimePitchHasher$1 {
+  class OntimePitchHasher {
     constructor(_mapPath) {
       if (_mapPath !== undefined) {
         this.map = require(_mapPath);
@@ -250,10 +250,10 @@ var mf = (function () {
           } else {
             this.map[key] = {
               "increment": 1,
-              "log": fs$1.openSync(path$1.join(dir, key + ".json"), "a")
+              "log": fs.openSync(path.join(dir, key + ".json"), "a")
             };
           }
-          fs$1.writeSync(
+          fs.writeSync(
             this.map[key].log,
             JSON.stringify(
               [
@@ -269,8 +269,8 @@ var mf = (function () {
           } else {
             this.map[key] = {
               "increment": 1,
-              "log": fs$1.openSync(
-                path$1.join(dir, key + ".json"), "a"
+              "log": fs.openSync(
+                path.join(dir, key + ".json"), "a"
                 // {"flags": "a"}
               )
             };
@@ -278,7 +278,7 @@ var mf = (function () {
           const content = JSON.stringify(Math.round(100 * hashEntry.ctimes[0]) / 100) + ","; // 82.3MB
           // const content = JSON.stringify(Math.round(10 * hashEntry.ctimes[0]) / 10) + "," // 72.MB
           // const content = JSON.stringify(hashEntry.ctimes[0]) + "," // 162.9MB
-          fs$1.writeSync(this.map[key].log, content);
+          fs.writeSync(this.map[key].log, content);
           // this.map[key].log.write(content)
 
           // fs.writeFileSync(
@@ -374,9 +374,9 @@ var mf = (function () {
                       const he = this.create_hash_entry(
                         [v1[1] - v0[1], v2[1] - v1[1], td2 / td1], mode, v0[0]
                       );
-                      if (fs$1.existsSync(path$1.join(folder, he.hash + ".json"))) {
-                        const lookupStr = fs$1.readFileSync(
-                          path$1.join(folder, he.hash + ".json"), "utf8"
+                      if (fs.existsSync(path.join(folder, he.hash + ".json"))) {
+                        const lookupStr = fs.readFileSync(
+                          path.join(folder, he.hash + ".json"), "utf8"
                         ).slice(0, -1);
                         let lookup = JSON.parse("[" + lookupStr + "]");
                         lookup.forEach((value) => {
@@ -420,12 +420,12 @@ var mf = (function () {
   }
 
   // Imports
-  const fs = require("fs");
-  const path = require("path");
-  require("maia-util");
+  const fs$1 = require("fs");
+  const path$1 = require("path");
+  const mu$1 = require("maia-util");
   // import PointSet from './PointSet'
 
-  class HasherNoConcat$1 {
+  class HasherNoConcat {
     constructor(_mapPath) {
       if (_mapPath !== undefined) {
         this.map = require(_mapPath);
@@ -621,11 +621,7 @@ var mf = (function () {
     }
 
 
-    // This method is inefficient and could be improved. I don't think it's worth
-    // obtaining the name of each piece when most of the entries of countBins
-    // are zero. Therefore, I've sliced it to topN.
-    // * the "fnams" here are file names involved in countBins.
-    // ctimes: the max ontime of each piece of music in a dataset.
+    // Obsolete
     get_piece_names(countBins, binSize, topN = 100){
       let out = [];
 
@@ -641,7 +637,7 @@ var mf = (function () {
           );
         });
       });
-      
+
       // "out" contains the index of bin,
       // and it is sorted based on the corresponding number of hash entries contained in "hist".
       out.sort(function (a, b) {
@@ -678,10 +674,10 @@ var mf = (function () {
           } else {
             this.map[key] = {
               "increment": 1,
-              "log": fs.openSync(path.join(dir, key + ".json"), "a")
+              "log": fs$1.openSync(path$1.join(dir, key + ".json"), "a")
             };
           }
-          fs.writeSync(
+          fs$1.writeSync(
             this.map[key].log,
             JSON.stringify(
               [
@@ -697,8 +693,8 @@ var mf = (function () {
           } else {
             this.map[key] = {
               "increment": 1,
-              "log": fs.openSync(
-                path.join(dir, key + ".json"), "a"
+              "log": fs$1.openSync(
+                path$1.join(dir, key + ".json"), "a"
                 // {"flags": "a"}
               )
             };
@@ -706,7 +702,7 @@ var mf = (function () {
           const content = JSON.stringify(Math.round(100 * hashEntry.ctimes[0]) / 100) + ","; // 82.3MB
           // const content = JSON.stringify(Math.round(10 * hashEntry.ctimes[0]) / 10) + "," // 72.MB
           // const content = JSON.stringify(hashEntry.ctimes[0]) + "," // 162.9MB
-          fs.writeSync(this.map[key].log, content);
+          fs$1.writeSync(this.map[key].log, content);
           // this.map[key].log.write(content)
 
           // fs.writeFileSync(
@@ -733,14 +729,15 @@ var mf = (function () {
     // lexicographically.
     // maxOntimes: the max ontime of each piece of music in a dataset.
     match_hash_entries(
-      pts, mode = "duples", tMin, tMax, pMin, pMax, maxOntimes, binSize, folder = __dirname
+      pts, mode = "duples", tMin, tMax, pMin, pMax, maxOntimes, binSize,
+      folder = __dirname, topN = 100
     ) {
       let uninh = new Set();
       // const bins = Math.ceil(maxOntimes[maxOntimes.length - 1] / binSize);
       let countBins = new Map();
       // let countBin = new Array(bins).fill(0).map(() => {
       //   return new Set()
-      // }) 
+      // })
       pts = pts.slice(0, 80);
       const npts = pts.length;
       let nh = 0;
@@ -804,9 +801,9 @@ var mf = (function () {
                       const he = this.create_hash_entry(
                         [v1[1] - v0[1], v2[1] - v1[1], td2 / td1], mode, v0[0]
                       );
-                      if (fs.existsSync(path.join(folder, he.hash + ".json"))) {
-                        const lookupStr = fs.readFileSync(
-                          path.join(folder, he.hash + ".json"), "utf8"
+                      if (fs$1.existsSync(path$1.join(folder, he.hash + ".json"))) {
+                        const lookupStr = fs$1.readFileSync(
+                          path$1.join(folder, he.hash + ".json"), "utf8"
                         ).slice(0, -1);
                         let lookup = JSON.parse("[" + lookupStr + "]");
                         lookup.forEach(function(item){
@@ -818,12 +815,12 @@ var mf = (function () {
                             countBins.set(tmp_fname, new Array(bins).fill(0).map(() => {return new Set()}));
                           }
                           let dif = tmp_ontime - he.ctimes[0];
-                            if (dif >= 0 && dif <= maxOntimes[tmp_fname]) { 
+                            if (dif >= 0 && dif <= maxOntimes[tmp_fname]) {
                               var index_now = Math.floor(dif / binSize);
                               var setArray = countBins.get(tmp_fname);
                               var target = setArray[index_now];
                               target.add(he.hash);
-                          } 
+                          }
                         });
                       }
                       uninh.add(he.hash);
@@ -849,16 +846,31 @@ var mf = (function () {
           console.log("Should not get to default in match_hash_entries() switch.");
       }
 
-      for(let key of countBins.keys()){
-        countBins.set(key, countBins.get(key).map((value => {
+      // Collect the topN matches. Will keep this sorted descending by setSize
+      // property.
+      const out = new Array(topN);
+      for (let key of countBins.keys()){
+        const countBinsForPiece = countBins.get(key).map((value => {
           return value.size
-        })));
+        }));
+        countBinsForPiece.forEach(function(count, idx){
+          {
+            out[idx] = {
+              "winningPiece": key,
+              "edge": idx*binSize,
+              "setSize": count
+            };
+            out.sort(function(a, b){
+              return b.setSize - a.setSize
+            });
+          }
+        });
       }
 
       return {
         "nosHashes": nh,
         "uninosHashes": uninh.size,
-        "countBins": countBins
+        "countBins": out
       }
     }
   }
@@ -870,8 +882,8 @@ var mf = (function () {
    * Algorithms, Inc. in various applications that we have produced or are
    * developing currently.
    *
-   * @version 0.0.7
-   * @author Tom Collins
+   * @version 0.0.14
+   * @author Tom Collins and Chenyu Gao
    * @copyright 2022
    *
    */
@@ -883,18 +895,18 @@ var mf = (function () {
   // } from './util_key'
 
 
-  const OntimePitchHasher = OntimePitchHasher$1;
-  const HasherNoConcat = HasherNoConcat$1;
+  const OntimePitchHasher$1 = OntimePitchHasher;
+  const HasherNoConcat$1 = HasherNoConcat;
   // export const Grid = Grid_default
 
 
   var maiaHash = {
-    OntimePitchHasher,
-    HasherNoConcat,
+    OntimePitchHasher: OntimePitchHasher$1,
+    HasherNoConcat: HasherNoConcat$1,
     // Grid,
 
   };
 
   return maiaHash;
 
-})();
+}());
