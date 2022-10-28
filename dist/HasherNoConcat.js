@@ -410,6 +410,8 @@ var HasherNoConcat = function () {
                               return new Set();
                             }));
                           }
+                          // Important line, and where other transformation operations
+                          // could be supported in future.
                           var dif = tmp_ontime - he.ctimes[0];
                           if (dif >= 0 && dif <= maxOntimes[tmp_fname]) {
                             var index_now = Math.floor(dif / binSize);
@@ -465,7 +467,7 @@ var HasherNoConcat = function () {
             jdx < topN - 1 || // Still isn't full given value of topN.
             count > out[jdx]["setSize"] // Bigger match than current minimum.
             ) {
-                out[idx] = {
+                out[jdx] = {
                   "winningPiece": key,
                   "edge": idx * binSize,
                   "setSize": count
@@ -493,6 +495,10 @@ var HasherNoConcat = function () {
             throw _iteratorError;
           }
         }
+      }
+
+      if (jdx < topN - 1) {
+        out = out.slice(0, jdx);
       }
 
       return {

@@ -68,6 +68,6 @@ TBD
 
 ## Release History
 
-* 0.0.8-14 Experimenting with no concatenation.
+* 0.0.8-15 Implemented a version without concatenation.
 * 0.0.4-7 Renamed an outdated histogram operation to get_piece_names().
 * 0.0.0-3 Initial release and bug fixes

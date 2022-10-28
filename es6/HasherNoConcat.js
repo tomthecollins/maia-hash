@@ -393,12 +393,14 @@ export default class HasherNoConcat {
                           const bins = Math.ceil(maxOntimes[tmp_fname] / binSize)
                           countBins.set(tmp_fname, new Array(bins).fill(0).map(() => {return new Set()}))
                         }
+                        // Important line, and where other transformation operations
+                        // could be supported in future.
                         let dif = tmp_ontime - he.ctimes[0]
-                          if (dif >= 0 && dif <= maxOntimes[tmp_fname]) {
-                            var index_now = Math.floor(dif / binSize);
-                            var setArray = countBins.get(tmp_fname);
-                            var target = setArray[index_now];
-                            target.add(he.hash);
+                        if (dif >= 0 && dif <= maxOntimes[tmp_fname]){
+                          var index_now = Math.floor(dif / binSize);
+                          var setArray = countBins.get(tmp_fname);
+                          var target = setArray[index_now];
+                          target.add(he.hash);
                         }
                       })
                     }
@@ -427,7 +429,7 @@ export default class HasherNoConcat {
 
     // Collect the topN matches. Will keep this sorted descending by setSize
     // property.
-    const out = new Array(topN)
+    let out = new Array(topN)
     let jdx = 0 // Increment to populate out and throw away any unused entries.
     for (let key of countBins.keys()){
       const countBinsForPiece = countBins.get(key).map((value => {
@@ -439,7 +441,7 @@ export default class HasherNoConcat {
           jdx < topN - 1 || // Still isn't full given value of topN.
           count > out[jdx]["setSize"] // Bigger match than current minimum.
         ){
-          out[idx] = {
+          out[jdx] = {
             "winningPiece": key,
             "edge": idx*binSize,
             "setSize": count
@@ -449,6 +451,9 @@ export default class HasherNoConcat {
           })
         }
       })
+    }
+    if (jdx < topN - 1){
+      out = out.slice(0, jdx)
     }
 
     return {

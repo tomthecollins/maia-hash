@@ -814,12 +814,14 @@ var mf = (function () {
                             const bins = Math.ceil(maxOntimes[tmp_fname] / binSize);
                             countBins.set(tmp_fname, new Array(bins).fill(0).map(() => {return new Set()}));
                           }
+                          // Important line, and where other transformation operations
+                          // could be supported in future.
                           let dif = tmp_ontime - he.ctimes[0];
-                            if (dif >= 0 && dif <= maxOntimes[tmp_fname]) {
-                              var index_now = Math.floor(dif / binSize);
-                              var setArray = countBins.get(tmp_fname);
-                              var target = setArray[index_now];
-                              target.add(he.hash);
+                          if (dif >= 0 && dif <= maxOntimes[tmp_fname]){
+                            var index_now = Math.floor(dif / binSize);
+                            var setArray = countBins.get(tmp_fname);
+                            var target = setArray[index_now];
+                            target.add(he.hash);
                           }
                         });
                       }
@@ -848,14 +850,15 @@ var mf = (function () {
 
       // Collect the topN matches. Will keep this sorted descending by setSize
       // property.
-      const out = new Array(topN);
+      let out = new Array(topN);
+      let jdx = 0; // Increment to populate out and throw away any unused entries.
       for (let key of countBins.keys()){
         const countBinsForPiece = countBins.get(key).map((value => {
           return value.size
         }));
         countBinsForPiece.forEach(function(count, idx){
           {
-            out[idx] = {
+            out[jdx] = {
               "winningPiece": key,
               "edge": idx*binSize,
               "setSize": count
@@ -865,6 +868,9 @@ var mf = (function () {
             });
           }
         });
+      }
+      if (jdx < topN - 1){
+        out = out.slice(0, jdx);
       }
 
       return {
@@ -882,7 +888,7 @@ var mf = (function () {
    * Algorithms, Inc. in various applications that we have produced or are
    * developing currently.
    *
-   * @version 0.0.14
+   * @version 0.0.15
    * @author Tom Collins and Chenyu Gao
    * @copyright 2022
    *
