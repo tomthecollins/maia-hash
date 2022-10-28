@@ -449,7 +449,7 @@ var HasherNoConcat = function () {
 
       // Collect the topN matches. Will keep this sorted descending by setSize
       // property.
-      var out = new Array(topN);
+      var out = [];
       var jdx = 0; // Increment to populate out and throw away any unused entries.
       var _iteratorNormalCompletion = true;
       var _didIteratorError = false;
@@ -498,10 +498,6 @@ var HasherNoConcat = function () {
             throw _iteratorError;
           }
         }
-      }
-
-      if (jdx < topN - 1) {
-        out = out.slice(0, jdx);
       }
 
       return {

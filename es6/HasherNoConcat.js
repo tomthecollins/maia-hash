@@ -429,7 +429,7 @@ export default class HasherNoConcat {
 
     // Collect the topN matches. Will keep this sorted descending by setSize
     // property.
-    let out = new Array(topN)
+    let out = []
     let jdx = 0 // Increment to populate out and throw away any unused entries.
     for (let key of countBins.keys()){
       const countBinsForPiece = countBins.get(key).map((value => {
@@ -454,9 +454,6 @@ export default class HasherNoConcat {
           }
         }
       })
-    }
-    if (jdx < topN - 1){
-      out = out.slice(0, jdx)
     }
 
     return {

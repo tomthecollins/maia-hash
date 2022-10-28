@@ -850,7 +850,7 @@ var mf = (function () {
 
       // Collect the topN matches. Will keep this sorted descending by setSize
       // property.
-      let out = new Array(topN);
+      let out = [];
       let jdx = 0; // Increment to populate out and throw away any unused entries.
       for (let key of countBins.keys()){
         const countBinsForPiece = countBins.get(key).map((value => {
@@ -876,9 +876,6 @@ var mf = (function () {
           }
         });
       }
-      if (jdx < topN - 1){
-        out = out.slice(0, jdx);
-      }
 
       return {
         "nosHashes": nh,
@@ -895,7 +892,7 @@ var mf = (function () {
    * Algorithms, Inc. in various applications that we have produced or are
    * developing currently.
    *
-   * @version 0.0.16
+   * @version 0.0.17
    * @author Tom Collins and Chenyu Gao
    * @copyright 2022
    *
