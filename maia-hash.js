@@ -857,7 +857,11 @@ var mf = (function () {
           return value.size
         }));
         countBinsForPiece.forEach(function(count, idx){
-          {
+          if (
+            jdx === 0 || // Nothing in it.
+            jdx < topN - 1 || // Still isn't full given value of topN.
+            count > out[jdx]["setSize"] // Bigger match than current minimum.
+          ){
             out[jdx] = {
               "winningPiece": key,
               "edge": idx*binSize,
@@ -866,6 +870,9 @@ var mf = (function () {
             out.sort(function(a, b){
               return b.setSize - a.setSize
             });
+            if (jdx < topN - 1){
+              jdx++;
+            }
           }
         });
       }
@@ -888,7 +895,7 @@ var mf = (function () {
    * Algorithms, Inc. in various applications that we have produced or are
    * developing currently.
    *
-   * @version 0.0.15
+   * @version 0.0.16
    * @author Tom Collins and Chenyu Gao
    * @copyright 2022
    *

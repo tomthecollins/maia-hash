@@ -475,6 +475,9 @@ var HasherNoConcat = function () {
                 out.sort(function (a, b) {
                   return b.setSize - a.setSize;
                 });
+                if (jdx < topN - 1) {
+                  jdx++;
+                }
               }
           });
         };
