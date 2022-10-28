@@ -860,7 +860,7 @@ var mf = (function () {
           if (
             jdx === 0 || // Nothing in it.
             jdx < topN - 1 || // Still isn't full given value of topN.
-            count > out[jdx]["setSize"] // Bigger match than current minimum.
+            count > out[out.length - 1]["setSize"] // Bigger match than current minimum.
           ){
             out[jdx] = {
               "winningPiece": key,
@@ -892,7 +892,7 @@ var mf = (function () {
    * Algorithms, Inc. in various applications that we have produced or are
    * developing currently.
    *
-   * @version 0.0.17
+   * @version 0.0.18
    * @author Tom Collins and Chenyu Gao
    * @copyright 2022
    *

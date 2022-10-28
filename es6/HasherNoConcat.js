@@ -439,7 +439,7 @@ export default class HasherNoConcat {
         if (
           jdx === 0 || // Nothing in it.
           jdx < topN - 1 || // Still isn't full given value of topN.
-          count > out[jdx]["setSize"] // Bigger match than current minimum.
+          count > out[out.length - 1]["setSize"] // Bigger match than current minimum.
         ){
           out[jdx] = {
             "winningPiece": key,
