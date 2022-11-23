@@ -84,7 +84,7 @@ export default class HasherNoConcat {
                     v0[0], fnam,
                     tMin, tMax
                   )
-                  this.insert(he, insertMode, folder)
+                  this.insert(he, insertMode, folder, [i, j, k])
                   nh++
                 } // End whether to make a hash entry.
                 if (td2 >= tMax) {
@@ -233,7 +233,7 @@ export default class HasherNoConcat {
 
 
 
-  insert(hashEntry, method = "hash and lookup", dir) {
+  insert(hashEntry, method = "hash and lookup", dir, tripleIdx) {
     const key = hashEntry.hash
     const lookup = this.contains(key)
     switch (method) {
@@ -266,6 +266,26 @@ export default class HasherNoConcat {
           ) + ","
         )
         break
+        case "increment and file with fnams and tripleIdx": // save triples of points for visualising
+          if (lookup !== undefined) {
+            this.map[key].increment++
+          } else {
+            this.map[key] = {
+              "increment": 1,
+              "log": fs.openSync(path.join(dir, key + ".json"), "a")
+            }
+          }
+          fs.writeSync(
+            this.map[key].log,
+            JSON.stringify(
+              [
+                Math.round(100 * hashEntry.ctimes[0]) / 100,
+                hashEntry.fnams[0],
+                tripleIdx
+              ]
+            ) + ","
+          )
+          break
       case "increment and file":
         if (lookup !== undefined) {
           this.map[key].increment++
@@ -320,6 +340,8 @@ export default class HasherNoConcat {
     pts = pts.slice(0, 80)
     const npts = pts.length
     let nh = 0
+    let queHashPointIdx = new Map() // save matched query triples according to each countBin index.
+    let lookupHashPointIdx = new Map() // save matched triples in lookup table according to each countBin index.
 
     switch (mode) {
       case "duples":
@@ -392,15 +414,25 @@ export default class HasherNoConcat {
                         if(!countBins.has(tmp_fname)){
                           const bins = Math.ceil(maxOntimes[tmp_fname] / binSize)
                           countBins.set(tmp_fname, new Array(bins).fill(0).map(() => {return new Set()}))
+                          queHashPointIdx.set(tmp_fname, new Array(bins).fill(0).map(() => {return new Set()})) // Initialising
+                          lookupHashPointIdx.set(tmp_fname, new Array(bins).fill(0).map(() => {return new Set()})) // Initialising
                         }
                         // Important line, and where other transformation operations
                         // could be supported in future.
                         let dif = tmp_ontime - he.ctimes[0]
                         if (dif >= 0 && dif <= maxOntimes[tmp_fname]){
-                          var index_now = Math.floor(dif / binSize);
-                          var setArray = countBins.get(tmp_fname);
-                          var target = setArray[index_now];
-                          target.add(he.hash);
+                          let index_now = Math.floor(dif / binSize)
+                          let setArray = countBins.get(tmp_fname)
+                          let target = setArray[index_now]
+                          if(!target.has(he.hash)){
+                            target.add(he.hash)
+                            let queArray = queHashPointIdx.get(tmp_fname)
+                            let tarQueBin = queArray[index_now]
+                            tarQueBin.add([i, j, k])
+                            let lookupArray = lookupHashPointIdx.get(tmp_fname)
+                            let tarLookupBin = lookupArray[index_now]
+                            tarLookupBin.add(item[2])
+                          }
                         }
                       })
                     }
@@ -444,7 +476,9 @@ export default class HasherNoConcat {
           out[jdx] = {
             "winningPiece": key,
             "edge": idx*binSize,
-            "setSize": count
+            "setSize": count,
+            "queTriplets": Array.from(queHashPointIdx.get(key)[idx]),
+            "lookupTriplets": Array.from(lookupHashPointIdx.get(key)[idx])
           }
           out.sort(function(a, b){
             return b.setSize - a.setSize

@@ -2,12 +2,12 @@ var mf = (function () {
   'use strict';
 
   // Imports
-  const fs = require("fs");
-  const path = require("path");
-  const mu = require("maia-util");
+  const fs$1 = require("fs");
+  const path$1 = require("path");
+  require("maia-util");
   // import PointSet from './PointSet'
 
-  class OntimePitchHasher {
+  class OntimePitchHasher$1 {
     constructor(_mapPath) {
       if (_mapPath !== undefined) {
         this.map = require(_mapPath);
@@ -250,10 +250,10 @@ var mf = (function () {
           } else {
             this.map[key] = {
               "increment": 1,
-              "log": fs.openSync(path.join(dir, key + ".json"), "a")
+              "log": fs$1.openSync(path$1.join(dir, key + ".json"), "a")
             };
           }
-          fs.writeSync(
+          fs$1.writeSync(
             this.map[key].log,
             JSON.stringify(
               [
@@ -269,8 +269,8 @@ var mf = (function () {
           } else {
             this.map[key] = {
               "increment": 1,
-              "log": fs.openSync(
-                path.join(dir, key + ".json"), "a"
+              "log": fs$1.openSync(
+                path$1.join(dir, key + ".json"), "a"
                 // {"flags": "a"}
               )
             };
@@ -278,7 +278,7 @@ var mf = (function () {
           const content = JSON.stringify(Math.round(100 * hashEntry.ctimes[0]) / 100) + ","; // 82.3MB
           // const content = JSON.stringify(Math.round(10 * hashEntry.ctimes[0]) / 10) + "," // 72.MB
           // const content = JSON.stringify(hashEntry.ctimes[0]) + "," // 162.9MB
-          fs.writeSync(this.map[key].log, content);
+          fs$1.writeSync(this.map[key].log, content);
           // this.map[key].log.write(content)
 
           // fs.writeFileSync(
@@ -374,9 +374,9 @@ var mf = (function () {
                       const he = this.create_hash_entry(
                         [v1[1] - v0[1], v2[1] - v1[1], td2 / td1], mode, v0[0]
                       );
-                      if (fs.existsSync(path.join(folder, he.hash + ".json"))) {
-                        const lookupStr = fs.readFileSync(
-                          path.join(folder, he.hash + ".json"), "utf8"
+                      if (fs$1.existsSync(path$1.join(folder, he.hash + ".json"))) {
+                        const lookupStr = fs$1.readFileSync(
+                          path$1.join(folder, he.hash + ".json"), "utf8"
                         ).slice(0, -1);
                         let lookup = JSON.parse("[" + lookupStr + "]");
                         lookup.forEach((value) => {
@@ -420,12 +420,12 @@ var mf = (function () {
   }
 
   // Imports
-  const fs$1 = require("fs");
-  const path$1 = require("path");
-  const mu$1 = require("maia-util");
+  const fs = require("fs");
+  const path = require("path");
+  require("maia-util");
   // import PointSet from './PointSet'
 
-  class HasherNoConcat {
+  class HasherNoConcat$1 {
     constructor(_mapPath) {
       if (_mapPath !== undefined) {
         this.map = require(_mapPath);
@@ -505,7 +505,7 @@ var mf = (function () {
                       v0[0], fnam,
                       tMin, tMax
                     );
-                    this.insert(he, insertMode, folder);
+                    this.insert(he, insertMode, folder, [i, j, k]);
                     nh++;
                   } // End whether to make a hash entry.
                   if (td2 >= tMax) {
@@ -654,7 +654,7 @@ var mf = (function () {
 
 
 
-    insert(hashEntry, method = "hash and lookup", dir) {
+    insert(hashEntry, method = "hash and lookup", dir, tripleIdx) {
       const key = hashEntry.hash;
       const lookup = this.contains(key);
       switch (method) {
@@ -674,10 +674,10 @@ var mf = (function () {
           } else {
             this.map[key] = {
               "increment": 1,
-              "log": fs$1.openSync(path$1.join(dir, key + ".json"), "a")
+              "log": fs.openSync(path.join(dir, key + ".json"), "a")
             };
           }
-          fs$1.writeSync(
+          fs.writeSync(
             this.map[key].log,
             JSON.stringify(
               [
@@ -687,14 +687,34 @@ var mf = (function () {
             ) + ","
           );
           break
+          case "increment and file with fnams and tripleIdx": // save triples of points for visualising
+            if (lookup !== undefined) {
+              this.map[key].increment++;
+            } else {
+              this.map[key] = {
+                "increment": 1,
+                "log": fs.openSync(path.join(dir, key + ".json"), "a")
+              };
+            }
+            fs.writeSync(
+              this.map[key].log,
+              JSON.stringify(
+                [
+                  Math.round(100 * hashEntry.ctimes[0]) / 100,
+                  hashEntry.fnams[0],
+                  tripleIdx
+                ]
+              ) + ","
+            );
+            break
         case "increment and file":
           if (lookup !== undefined) {
             this.map[key].increment++;
           } else {
             this.map[key] = {
               "increment": 1,
-              "log": fs$1.openSync(
-                path$1.join(dir, key + ".json"), "a"
+              "log": fs.openSync(
+                path.join(dir, key + ".json"), "a"
                 // {"flags": "a"}
               )
             };
@@ -702,7 +722,7 @@ var mf = (function () {
           const content = JSON.stringify(Math.round(100 * hashEntry.ctimes[0]) / 100) + ","; // 82.3MB
           // const content = JSON.stringify(Math.round(10 * hashEntry.ctimes[0]) / 10) + "," // 72.MB
           // const content = JSON.stringify(hashEntry.ctimes[0]) + "," // 162.9MB
-          fs$1.writeSync(this.map[key].log, content);
+          fs.writeSync(this.map[key].log, content);
           // this.map[key].log.write(content)
 
           // fs.writeFileSync(
@@ -741,6 +761,8 @@ var mf = (function () {
       pts = pts.slice(0, 80);
       const npts = pts.length;
       let nh = 0;
+      let queHashPointIdx = new Map(); // save matched query triples according to each countBin index.
+      let lookupHashPointIdx = new Map(); // save matched triples in lookup table according to each countBin index.
 
       switch (mode) {
         case "duples":
@@ -801,9 +823,9 @@ var mf = (function () {
                       const he = this.create_hash_entry(
                         [v1[1] - v0[1], v2[1] - v1[1], td2 / td1], mode, v0[0]
                       );
-                      if (fs$1.existsSync(path$1.join(folder, he.hash + ".json"))) {
-                        const lookupStr = fs$1.readFileSync(
-                          path$1.join(folder, he.hash + ".json"), "utf8"
+                      if (fs.existsSync(path.join(folder, he.hash + ".json"))) {
+                        const lookupStr = fs.readFileSync(
+                          path.join(folder, he.hash + ".json"), "utf8"
                         ).slice(0, -1);
                         let lookup = JSON.parse("[" + lookupStr + "]");
                         lookup.forEach(function(item){
@@ -813,15 +835,25 @@ var mf = (function () {
                           if(!countBins.has(tmp_fname)){
                             const bins = Math.ceil(maxOntimes[tmp_fname] / binSize);
                             countBins.set(tmp_fname, new Array(bins).fill(0).map(() => {return new Set()}));
+                            queHashPointIdx.set(tmp_fname, new Array(bins).fill(0).map(() => {return new Set()})); // Initialising
+                            lookupHashPointIdx.set(tmp_fname, new Array(bins).fill(0).map(() => {return new Set()})); // Initialising
                           }
                           // Important line, and where other transformation operations
                           // could be supported in future.
                           let dif = tmp_ontime - he.ctimes[0];
                           if (dif >= 0 && dif <= maxOntimes[tmp_fname]){
-                            var index_now = Math.floor(dif / binSize);
-                            var setArray = countBins.get(tmp_fname);
-                            var target = setArray[index_now];
-                            target.add(he.hash);
+                            let index_now = Math.floor(dif / binSize);
+                            let setArray = countBins.get(tmp_fname);
+                            let target = setArray[index_now];
+                            if(!target.has(he.hash)){
+                              target.add(he.hash);
+                              let queArray = queHashPointIdx.get(tmp_fname);
+                              let tarQueBin = queArray[index_now];
+                              tarQueBin.add([i, j, k]);
+                              let lookupArray = lookupHashPointIdx.get(tmp_fname);
+                              let tarLookupBin = lookupArray[index_now];
+                              tarLookupBin.add(item[2]);
+                            }
                           }
                         });
                       }
@@ -865,7 +897,9 @@ var mf = (function () {
             out[jdx] = {
               "winningPiece": key,
               "edge": idx*binSize,
-              "setSize": count
+              "setSize": count,
+              "queTriplets": Array.from(queHashPointIdx.get(key)[idx]),
+              "lookupTriplets": Array.from(lookupHashPointIdx.get(key)[idx])
             };
             out.sort(function(a, b){
               return b.setSize - a.setSize
@@ -905,18 +939,18 @@ var mf = (function () {
   // } from './util_key'
 
 
-  const OntimePitchHasher$1 = OntimePitchHasher;
-  const HasherNoConcat$1 = HasherNoConcat;
+  const OntimePitchHasher = OntimePitchHasher$1;
+  const HasherNoConcat = HasherNoConcat$1;
   // export const Grid = Grid_default
 
 
   var maiaHash = {
-    OntimePitchHasher: OntimePitchHasher$1,
-    HasherNoConcat: HasherNoConcat$1,
+    OntimePitchHasher,
+    HasherNoConcat,
     // Grid,
 
   };
 
   return maiaHash;
 
-}());
+})();

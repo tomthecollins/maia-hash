@@ -68,6 +68,7 @@ TBD
 
 ## Release History
 
+* 0.0.19 Modifications for visualising triples of points that give rise to matching hashes.
 * 0.0.8-18 Implemented a version without concatenation.
 * 0.0.4-7 Renamed an outdated histogram operation to get_piece_names().
 * 0.0.0-3 Initial release and bug fixes

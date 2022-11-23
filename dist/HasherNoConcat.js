@@ -4,6 +4,8 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -96,7 +98,7 @@ var HasherNoConcat = function () {
                   if (td2 > tMin && td2 < tMax && apd2 >= pMin && apd2 <= pMax) {
                     // Make a hash entry, something like "±pd1±pd2tdr"
                     var _he = this.create_hash_entry([_v2[1] - _v[1], v2[1] - _v2[1], td2 / td1], mode, _v[0], fnam, tMin, tMax);
-                    this.insert(_he, insertMode, folder);
+                    this.insert(_he, insertMode, folder, [_i, _j, k]);
                     nh++;
                   } // End whether to make a hash entry.
                   if (td2 >= tMax) {
@@ -250,6 +252,7 @@ var HasherNoConcat = function () {
     value: function insert(hashEntry) {
       var method = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : "hash and lookup";
       var dir = arguments[2];
+      var tripleIdx = arguments[3];
 
       var key = hashEntry.hash;
       var lookup = this.contains(key);
@@ -274,6 +277,18 @@ var HasherNoConcat = function () {
             };
           }
           fs.writeSync(this.map[key].log, JSON.stringify([Math.round(100 * hashEntry.ctimes[0]) / 100, hashEntry.fnams[0]]) + ",");
+          break;
+        case "increment and file with fnams and tripleIdx":
+          // save triples of points for visualising
+          if (lookup !== undefined) {
+            this.map[key].increment++;
+          } else {
+            this.map[key] = {
+              "increment": 1,
+              "log": fs.openSync(path.join(dir, key + ".json"), "a")
+            };
+          }
+          fs.writeSync(this.map[key].log, JSON.stringify([Math.round(100 * hashEntry.ctimes[0]) / 100, hashEntry.fnams[0], tripleIdx]) + ",");
           break;
         case "increment and file":
           if (lookup !== undefined) {
@@ -339,6 +354,8 @@ var HasherNoConcat = function () {
       pts = pts.slice(0, 80);
       var npts = pts.length;
       var nh = 0;
+      var queHashPointIdx = new Map(); // save matched query triples according to each countBin index.
+      var lookupHashPointIdx = new Map(); // save matched triples in lookup table according to each countBin index.
 
       switch (mode) {
         case "duples":
@@ -377,70 +394,98 @@ var HasherNoConcat = function () {
           break;
 
         case "triples":
-          loop1: for (var _i2 = 0; _i2 < npts - 2; _i2++) {
-            var _v3 = pts[_i2];
-            var _j2 = _i2 + 1;
-            while (_j2 < npts - 1) {
-              var _v4 = pts[_j2];
-              var td1 = _v4[0] - _v3[0];
-              var apd1 = Math.abs(_v4[1] - _v3[1]);
+          var _loop = function _loop(_i2) {
+            var v0 = pts[_i2];
+            var j = _i2 + 1;
+            while (j < npts - 1) {
+              var _v3 = pts[j];
+              var td1 = _v3[0] - v0[0];
+              var apd1 = Math.abs(_v3[1] - v0[1]);
               // console.log("i:", i, "j:", j)
               // Decide whether to proceed to v1 and v2.
               if (td1 > tMin && td1 < tMax && apd1 >= pMin && apd1 <= pMax) {
-                var k = _j2 + 1;
-                while (k < npts) {
-                  var v2 = pts[k];
-                  var td2 = v2[0] - _v4[0];
-                  var apd2 = Math.abs(v2[1] - _v4[1]);
-                  // console.log("j:", j, "k:", k)
-                  // Decide whether to make a hash entry.
-                  if (td2 > tMin && td2 < tMax && apd2 >= pMin && apd2 <= pMax) {
-                    var _ret2 = function () {
-                      var he = _this.create_hash_entry([_v4[1] - _v3[1], v2[1] - _v4[1], td2 / td1], mode, _v3[0]);
-                      if (fs.existsSync(path.join(folder, he.hash + ".json"))) {
-                        var lookupStr = fs.readFileSync(path.join(folder, he.hash + ".json"), "utf8").slice(0, -1);
-                        var lookup = JSON.parse("[" + lookupStr + "]");
-                        lookup.forEach(function (item) {
-                          var tmp_fname = item[1];
-                          var tmp_ontime = item[0];
-                          // create a new countBin when a new music with quired hash appears.
-                          if (!countBins.has(tmp_fname)) {
-                            var bins = Math.ceil(maxOntimes[tmp_fname] / binSize);
-                            countBins.set(tmp_fname, new Array(bins).fill(0).map(function () {
-                              return new Set();
-                            }));
-                          }
-                          // Important line, and where other transformation operations
-                          // could be supported in future.
-                          var dif = tmp_ontime - he.ctimes[0];
-                          if (dif >= 0 && dif <= maxOntimes[tmp_fname]) {
-                            var index_now = Math.floor(dif / binSize);
-                            var setArray = countBins.get(tmp_fname);
-                            var target = setArray[index_now];
-                            target.add(he.hash);
-                          }
-                        });
-                      }
-                      uninh.add(he.hash);
-                      nh++;
-                      if (nh > 5000) {
-                        return "break|loop1";
-                      }
-                    }();
+                var _ret3 = function () {
+                  var k = j + 1;
+                  while (k < npts) {
+                    var v2 = pts[k];
+                    var td2 = v2[0] - _v3[0];
+                    var apd2 = Math.abs(v2[1] - _v3[1]);
+                    // console.log("j:", j, "k:", k)
+                    // Decide whether to make a hash entry.
+                    if (td2 > tMin && td2 < tMax && apd2 >= pMin && apd2 <= pMax) {
+                      var _ret4 = function () {
+                        var he = _this.create_hash_entry([_v3[1] - v0[1], v2[1] - _v3[1], td2 / td1], mode, v0[0]);
+                        if (fs.existsSync(path.join(folder, he.hash + ".json"))) {
+                          var lookupStr = fs.readFileSync(path.join(folder, he.hash + ".json"), "utf8").slice(0, -1);
+                          var lookup = JSON.parse("[" + lookupStr + "]");
+                          lookup.forEach(function (item) {
+                            var tmp_fname = item[1];
+                            var tmp_ontime = item[0];
+                            // create a new countBin when a new music with quired hash appears.
+                            if (!countBins.has(tmp_fname)) {
+                              var bins = Math.ceil(maxOntimes[tmp_fname] / binSize);
+                              countBins.set(tmp_fname, new Array(bins).fill(0).map(function () {
+                                return new Set();
+                              }));
+                              queHashPointIdx.set(tmp_fname, new Array(bins).fill(0).map(function () {
+                                return new Set();
+                              })); // Initialising
+                              lookupHashPointIdx.set(tmp_fname, new Array(bins).fill(0).map(function () {
+                                return new Set();
+                              })); // Initialising
+                            }
+                            // Important line, and where other transformation operations
+                            // could be supported in future.
+                            var dif = tmp_ontime - he.ctimes[0];
+                            if (dif >= 0 && dif <= maxOntimes[tmp_fname]) {
+                              var index_now = Math.floor(dif / binSize);
+                              var setArray = countBins.get(tmp_fname);
+                              var target = setArray[index_now];
+                              if (!target.has(he.hash)) {
+                                target.add(he.hash);
+                                var queArray = queHashPointIdx.get(tmp_fname);
+                                var tarQueBin = queArray[index_now];
+                                tarQueBin.add([_i2, j, k]);
+                                var lookupArray = lookupHashPointIdx.get(tmp_fname);
+                                var tarLookupBin = lookupArray[index_now];
+                                tarLookupBin.add(item[2]);
+                              }
+                            }
+                          });
+                        }
+                        uninh.add(he.hash);
+                        nh++;
+                        if (nh > 5000) {
+                          return {
+                            v: {
+                              v: "break|loop1"
+                            }
+                          };
+                        }
+                      }();
 
-                    if (_ret2 === "break|loop1") break loop1;
-                  } // End whether to make a hash entry.
-                  if (td2 >= tMax) {
-                    k = npts - 1;
-                  }
-                  k++;
-                } // End k while.
+                      if ((typeof _ret4 === "undefined" ? "undefined" : _typeof(_ret4)) === "object") return _ret4.v;
+                    } // End whether to make a hash entry.
+                    if (td2 >= tMax) {
+                      k = npts - 1;
+                    }
+                    k++;
+                  } // End k while.
+                }();
+
+                if ((typeof _ret3 === "undefined" ? "undefined" : _typeof(_ret3)) === "object") return _ret3.v;
               }
               if (td1 >= tMax) {
-                _j2 = npts - 2;
+                j = npts - 2;
               }
-              _j2++;
+              j++;
             } // End j while.
+          };
+
+          loop1: for (var _i2 = 0; _i2 < npts - 2; _i2++) {
+            var _ret2 = _loop(_i2);
+
+            if (_ret2 === "break|loop1") break loop1;
           } // for (let i = 0;
           break;
         default:
@@ -456,7 +501,7 @@ var HasherNoConcat = function () {
       var _iteratorError = undefined;
 
       try {
-        var _loop = function _loop() {
+        var _loop2 = function _loop2() {
           var key = _step.value;
 
           var countBinsForPiece = countBins.get(key).map(function (value) {
@@ -470,7 +515,9 @@ var HasherNoConcat = function () {
                 out[jdx] = {
                   "winningPiece": key,
                   "edge": idx * binSize,
-                  "setSize": count
+                  "setSize": count,
+                  "queTriplets": Array.from(queHashPointIdx.get(key)[idx]),
+                  "lookupTriplets": Array.from(lookupHashPointIdx.get(key)[idx])
                 };
                 out.sort(function (a, b) {
                   return b.setSize - a.setSize;
@@ -483,7 +530,7 @@ var HasherNoConcat = function () {
         };
 
         for (var _iterator = countBins.keys()[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-          _loop();
+          _loop2();
         }
       } catch (err) {
         _didIteratorError = true;
