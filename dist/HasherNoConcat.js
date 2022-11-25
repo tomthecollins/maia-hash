@@ -354,8 +354,7 @@ var HasherNoConcat = function () {
       pts = pts.slice(0, 80);
       var npts = pts.length;
       var nh = 0;
-      var queHashPointIdx = new Map(); // save matched query triples according to each countBin index.
-      var lookupHashPointIdx = new Map(); // save matched triples in lookup table according to each countBin index.
+      var queLookupHashPointIdx = new Map(); // save matched query triples according to each countBin index.
 
       switch (mode) {
         case "duples":
@@ -427,10 +426,7 @@ var HasherNoConcat = function () {
                               countBins.set(tmp_fname, new Array(bins).fill(0).map(function () {
                                 return new Set();
                               }));
-                              queHashPointIdx.set(tmp_fname, new Array(bins).fill(0).map(function () {
-                                return new Set();
-                              })); // Initialising
-                              lookupHashPointIdx.set(tmp_fname, new Array(bins).fill(0).map(function () {
+                              queLookupHashPointIdx.set(tmp_fname, new Array(bins).fill(0).map(function () {
                                 return new Set();
                               })); // Initialising
                             }
@@ -443,12 +439,9 @@ var HasherNoConcat = function () {
                               var target = setArray[index_now];
                               if (!target.has(he.hash)) {
                                 target.add(he.hash);
-                                var queArray = queHashPointIdx.get(tmp_fname);
+                                var queArray = queLookupHashPointIdx.get(tmp_fname);
                                 var tarQueBin = queArray[index_now];
-                                tarQueBin.add([_i2, j, k]);
-                                var lookupArray = lookupHashPointIdx.get(tmp_fname);
-                                var tarLookupBin = lookupArray[index_now];
-                                tarLookupBin.add(item[2]);
+                                tarQueBin.add([[_i2, j, k], item[2]]);
                               }
                             }
                           });
@@ -516,8 +509,7 @@ var HasherNoConcat = function () {
                   "winningPiece": key,
                   "edge": idx * binSize,
                   "setSize": count,
-                  "queTriplets": Array.from(queHashPointIdx.get(key)[idx]),
-                  "lookupTriplets": Array.from(lookupHashPointIdx.get(key)[idx])
+                  "queLookupTriplets": Array.from(queLookupHashPointIdx.get(key)[idx])
                 };
                 out.sort(function (a, b) {
                   return b.setSize - a.setSize;
