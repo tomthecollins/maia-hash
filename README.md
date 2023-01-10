@@ -68,6 +68,7 @@ TBD
 
 ## Release History
 
+* 0.0.21 Split match_hash_entries() into three cases: "duples", "triples", and "tripleIdx".
 * 0.0.19-0.0.20 Modifications for visualising triples of points that give rise to matching hashes.
 * 0.0.8-18 Implemented a version without concatenation.
 * 0.0.4-7 Renamed an outdated histogram operation to get_piece_names().

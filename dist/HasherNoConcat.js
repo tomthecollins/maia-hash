@@ -356,6 +356,11 @@ var HasherNoConcat = function () {
       var nh = 0;
       var queLookupHashPointIdx = new Map(); // save matched query triples according to each countBin index.
 
+      // Collect the topN matches. Will keep this sorted descending by setSize
+      // property.
+      var out = [];
+      var jdx = 0; // Increment to populate out and throw away any unused entries.
+
       switch (mode) {
         case "duples":
           for (var i = 0; i < npts - 1; i++) {
@@ -390,30 +395,157 @@ var HasherNoConcat = function () {
               j++;
             } // End while.
           } // for (let i = 0;
-          break;
 
-        case "triples":
-          var _loop = function _loop(_i2) {
-            var v0 = pts[_i2];
-            var j = _i2 + 1;
-            while (j < npts - 1) {
-              var _v3 = pts[j];
-              var td1 = _v3[0] - v0[0];
-              var apd1 = Math.abs(_v3[1] - v0[1]);
+          return {
+            "nosHashes": nh,
+            "uninosHashes": uninh.size,
+            "countBins": countBins.map(function (value) {
+              return value.size;
+            })
+            //break
+
+          };case "triples":
+          loop1: for (var _i2 = 0; _i2 < npts - 2; _i2++) {
+            var _v3 = pts[_i2];
+            var _j2 = _i2 + 1;
+            while (_j2 < npts - 1) {
+              var _v4 = pts[_j2];
+              var td1 = _v4[0] - _v3[0];
+              var apd1 = Math.abs(_v4[1] - _v3[1]);
               // console.log("i:", i, "j:", j)
               // Decide whether to proceed to v1 and v2.
               if (td1 > tMin && td1 < tMax && apd1 >= pMin && apd1 <= pMax) {
-                var _ret3 = function () {
+                var k = _j2 + 1;
+                while (k < npts) {
+                  var v2 = pts[k];
+                  var td2 = v2[0] - _v4[0];
+                  var apd2 = Math.abs(v2[1] - _v4[1]);
+                  // console.log("j:", j, "k:", k)
+                  // Decide whether to make a hash entry.
+                  if (td2 > tMin && td2 < tMax && apd2 >= pMin && apd2 <= pMax) {
+                    var _ret2 = function () {
+                      var he = _this.create_hash_entry([_v4[1] - _v3[1], v2[1] - _v4[1], td2 / td1], mode, _v3[0]);
+                      if (fs.existsSync(path.join(folder, he.hash + ".json"))) {
+                        var lookupStr = fs.readFileSync(path.join(folder, he.hash + ".json"), "utf8").slice(0, -1);
+                        var lookup = JSON.parse("[" + lookupStr + "]");
+                        lookup.forEach(function (item) {
+                          var tmp_fname = item[1];
+                          var tmp_ontime = item[0];
+                          // create a new countBin when a new music with quired hash appears.
+                          if (!countBins.has(tmp_fname)) {
+                            var bins = Math.ceil(maxOntimes[tmp_fname] / binSize);
+                            countBins.set(tmp_fname, new Array(bins).fill(0).map(function () {
+                              return new Set();
+                            }));
+                          }
+                          // Important line, and where other transformation operations
+                          // could be supported in future.
+                          var dif = tmp_ontime - he.ctimes[0];
+                          if (dif >= 0 && dif <= maxOntimes[tmp_fname]) {
+                            var index_now = Math.floor(dif / binSize);
+                            var setArray = countBins.get(tmp_fname);
+                            var target = setArray[index_now];
+                            target.add(he.hash);
+                          }
+                        });
+                      }
+                      uninh.add(he.hash);
+                      nh++;
+                      if (nh > 5000) {
+                        return "break|loop1";
+                      }
+                    }();
+
+                    if (_ret2 === "break|loop1") break loop1;
+                  } // End whether to make a hash entry.
+                  if (td2 >= tMax) {
+                    k = npts - 1;
+                  }
+                  k++;
+                } // End k while.
+              }
+              if (td1 >= tMax) {
+                _j2 = npts - 2;
+              }
+              _j2++;
+            } // End j while.
+          } // for (let i = 0;
+
+          // Collect the topN matches. Will keep this sorted descending by setSize
+          // property.
+          var _iteratorNormalCompletion = true;
+          var _didIteratorError = false;
+          var _iteratorError = undefined;
+
+          try {
+            var _loop = function _loop() {
+              var key = _step.value;
+
+              var countBinsForPiece = countBins.get(key).map(function (value) {
+                return value.size;
+              });
+              countBinsForPiece.forEach(function (count, idx) {
+                if (jdx === 0 || // Nothing in it.
+                jdx < topN - 1 || // Still isn't full given value of topN.
+                count > out[out.length - 1]["setSize"] // Bigger match than current minimum.
+                ) {
+                    out[jdx] = {
+                      "winningPiece": key,
+                      "edge": idx * binSize,
+                      "setSize": count
+                    };
+                    out.sort(function (a, b) {
+                      return b.setSize - a.setSize;
+                    });
+                    if (jdx < topN - 1) {
+                      jdx++;
+                    }
+                  }
+              });
+            };
+
+            for (var _iterator = countBins.keys()[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+              _loop();
+            }
+          } catch (err) {
+            _didIteratorError = true;
+            _iteratorError = err;
+          } finally {
+            try {
+              if (!_iteratorNormalCompletion && _iterator.return) {
+                _iterator.return();
+              }
+            } finally {
+              if (_didIteratorError) {
+                throw _iteratorError;
+              }
+            }
+          }
+
+          break;
+
+        case "tripleIdx":
+          var _loop2 = function _loop2(_i3) {
+            var v0 = pts[_i3];
+            var j = _i3 + 1;
+            while (j < npts - 1) {
+              var _v5 = pts[j];
+              var _td = _v5[0] - v0[0];
+              var _apd = Math.abs(_v5[1] - v0[1]);
+              // console.log("i:", i, "j:", j)
+              // Decide whether to proceed to v1 and v2.
+              if (_td > tMin && _td < tMax && _apd >= pMin && _apd <= pMax) {
+                var _ret5 = function () {
                   var k = j + 1;
                   while (k < npts) {
-                    var v2 = pts[k];
-                    var td2 = v2[0] - _v3[0];
-                    var apd2 = Math.abs(v2[1] - _v3[1]);
+                    var _v6 = pts[k];
+                    var _td2 = _v6[0] - _v5[0];
+                    var _apd2 = Math.abs(_v6[1] - _v5[1]);
                     // console.log("j:", j, "k:", k)
                     // Decide whether to make a hash entry.
-                    if (td2 > tMin && td2 < tMax && apd2 >= pMin && apd2 <= pMax) {
-                      var _ret4 = function () {
-                        var he = _this.create_hash_entry([_v3[1] - v0[1], v2[1] - _v3[1], td2 / td1], mode, v0[0]);
+                    if (_td2 > tMin && _td2 < tMax && _apd2 >= pMin && _apd2 <= pMax) {
+                      var _ret6 = function () {
+                        var he = _this.create_hash_entry([_v5[1] - v0[1], _v6[1] - _v5[1], _td2 / _td], "triples", v0[0]);
                         if (fs.existsSync(path.join(folder, he.hash + ".json"))) {
                           var lookupStr = fs.readFileSync(path.join(folder, he.hash + ".json"), "utf8").slice(0, -1);
                           var lookup = JSON.parse("[" + lookupStr + "]");
@@ -441,7 +573,7 @@ var HasherNoConcat = function () {
                                 target.add(he.hash);
                                 var queArray = queLookupHashPointIdx.get(tmp_fname);
                                 var tarQueBin = queArray[index_now];
-                                tarQueBin.add([[_i2, j, k], item[2]]);
+                                tarQueBin.add([[_i3, j, k], item[2]]);
                               }
                             }
                           });
@@ -457,86 +589,86 @@ var HasherNoConcat = function () {
                         }
                       }();
 
-                      if ((typeof _ret4 === "undefined" ? "undefined" : _typeof(_ret4)) === "object") return _ret4.v;
+                      if ((typeof _ret6 === "undefined" ? "undefined" : _typeof(_ret6)) === "object") return _ret6.v;
                     } // End whether to make a hash entry.
-                    if (td2 >= tMax) {
+                    if (_td2 >= tMax) {
                       k = npts - 1;
                     }
                     k++;
                   } // End k while.
                 }();
 
-                if ((typeof _ret3 === "undefined" ? "undefined" : _typeof(_ret3)) === "object") return _ret3.v;
+                if ((typeof _ret5 === "undefined" ? "undefined" : _typeof(_ret5)) === "object") return _ret5.v;
               }
-              if (td1 >= tMax) {
+              if (_td >= tMax) {
                 j = npts - 2;
               }
               j++;
             } // End j while.
           };
 
-          loop1: for (var _i2 = 0; _i2 < npts - 2; _i2++) {
-            var _ret2 = _loop(_i2);
+          loop1: for (var _i3 = 0; _i3 < npts - 2; _i3++) {
+            var _ret4 = _loop2(_i3);
 
-            if (_ret2 === "break|loop1") break loop1;
+            if (_ret4 === "break|loop1") break loop1;
           } // for (let i = 0;
+
+          // Collect the topN matches. Will keep this sorted descending by setSize
+          // property.
+          var _iteratorNormalCompletion2 = true;
+          var _didIteratorError2 = false;
+          var _iteratorError2 = undefined;
+
+          try {
+            var _loop3 = function _loop3() {
+              var key = _step2.value;
+
+              var countBinsForPiece = countBins.get(key).map(function (value) {
+                return value.size;
+              });
+              countBinsForPiece.forEach(function (count, idx) {
+                if (jdx === 0 || // Nothing in it.
+                jdx < topN - 1 || // Still isn't full given value of topN.
+                count > out[out.length - 1]["setSize"] // Bigger match than current minimum.
+                ) {
+                    out[jdx] = {
+                      "winningPiece": key,
+                      "edge": idx * binSize,
+                      "setSize": count,
+                      "queLookupTriplets": Array.from(queLookupHashPointIdx.get(key)[idx])
+                    };
+                    out.sort(function (a, b) {
+                      return b.setSize - a.setSize;
+                    });
+                    if (jdx < topN - 1) {
+                      jdx++;
+                    }
+                  }
+              });
+            };
+
+            for (var _iterator2 = countBins.keys()[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+              _loop3();
+            }
+          } catch (err) {
+            _didIteratorError2 = true;
+            _iteratorError2 = err;
+          } finally {
+            try {
+              if (!_iteratorNormalCompletion2 && _iterator2.return) {
+                _iterator2.return();
+              }
+            } finally {
+              if (_didIteratorError2) {
+                throw _iteratorError2;
+              }
+            }
+          }
+
           break;
+
         default:
           console.log("Should not get to default in match_hash_entries() switch.");
-      }
-
-      // Collect the topN matches. Will keep this sorted descending by setSize
-      // property.
-      var out = [];
-      var jdx = 0; // Increment to populate out and throw away any unused entries.
-      var _iteratorNormalCompletion = true;
-      var _didIteratorError = false;
-      var _iteratorError = undefined;
-
-      try {
-        var _loop2 = function _loop2() {
-          var key = _step.value;
-
-          var countBinsForPiece = countBins.get(key).map(function (value) {
-            return value.size;
-          });
-          countBinsForPiece.forEach(function (count, idx) {
-            if (jdx === 0 || // Nothing in it.
-            jdx < topN - 1 || // Still isn't full given value of topN.
-            count > out[out.length - 1]["setSize"] // Bigger match than current minimum.
-            ) {
-                out[jdx] = {
-                  "winningPiece": key,
-                  "edge": idx * binSize,
-                  "setSize": count,
-                  "queLookupTriplets": Array.from(queLookupHashPointIdx.get(key)[idx])
-                };
-                out.sort(function (a, b) {
-                  return b.setSize - a.setSize;
-                });
-                if (jdx < topN - 1) {
-                  jdx++;
-                }
-              }
-          });
-        };
-
-        for (var _iterator = countBins.keys()[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-          _loop2();
-        }
-      } catch (err) {
-        _didIteratorError = true;
-        _iteratorError = err;
-      } finally {
-        try {
-          if (!_iteratorNormalCompletion && _iterator.return) {
-            _iterator.return();
-          }
-        } finally {
-          if (_didIteratorError) {
-            throw _iteratorError;
-          }
-        }
       }
 
       return {

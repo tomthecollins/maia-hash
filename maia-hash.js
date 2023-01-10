@@ -763,6 +763,11 @@ var mf = (function () {
       let nh = 0;
       let queLookupHashPointIdx = new Map(); // save matched query triples according to each countBin index.
 
+      // Collect the topN matches. Will keep this sorted descending by setSize
+      // property.
+      let out = [];
+      let jdx = 0; // Increment to populate out and throw away any unused entries.
+
       switch (mode) {
         case "duples":
           for (let i = 0; i < npts - 1; i++) {
@@ -797,7 +802,15 @@ var mf = (function () {
               j++;
             } // End while.
           } // for (let i = 0;
-          break
+
+          return {
+            "nosHashes": nh,
+            "uninosHashes": uninh.size,
+            "countBins": countBins.map((value => {
+              return value.size
+            }))
+          }
+          //break
 
         case "triples":
           loop1:
@@ -821,6 +834,100 @@ var mf = (function () {
                     if (td2 > tMin && td2 < tMax && apd2 >= pMin && apd2 <= pMax) {
                       const he = this.create_hash_entry(
                         [v1[1] - v0[1], v2[1] - v1[1], td2 / td1], mode, v0[0]
+                      );
+                      if (fs.existsSync(path.join(folder, he.hash + ".json"))) {
+                        const lookupStr = fs.readFileSync(
+                          path.join(folder, he.hash + ".json"), "utf8"
+                        ).slice(0, -1);
+                        let lookup = JSON.parse("[" + lookupStr + "]");
+                        lookup.forEach(function(item){
+                          let tmp_fname = item[1];
+                          let tmp_ontime = item[0];
+                          // create a new countBin when a new music with quired hash appears.
+                          if(!countBins.has(tmp_fname)){
+                            const bins = Math.ceil(maxOntimes[tmp_fname] / binSize);
+                            countBins.set(tmp_fname, new Array(bins).fill(0).map(() => {return new Set()}));
+                          }
+                          // Important line, and where other transformation operations
+                          // could be supported in future.
+                          let dif = tmp_ontime - he.ctimes[0];
+                          if (dif >= 0 && dif <= maxOntimes[tmp_fname]){
+                            var index_now = Math.floor(dif / binSize);
+                            var setArray = countBins.get(tmp_fname);
+                            var target = setArray[index_now];
+                            target.add(he.hash);
+                          }
+                        });
+                      }
+                      uninh.add(he.hash);
+                      nh++;
+                      if (nh > 5000) {
+                        break loop1
+                      }
+                    } // End whether to make a hash entry.
+                    if (td2 >= tMax) {
+                      k = npts - 1;
+                    }
+                    k++;
+                  } // End k while.
+                }
+                if (td1 >= tMax) {
+                  j = npts - 2;
+                }
+                j++;
+              } // End j while.
+            } // for (let i = 0;
+          
+            // Collect the topN matches. Will keep this sorted descending by setSize
+            // property.
+            for (let key of countBins.keys()){
+              const countBinsForPiece = countBins.get(key).map((value => {
+                return value.size
+              }));
+              countBinsForPiece.forEach(function(count, idx){
+                if (
+                  jdx === 0 || // Nothing in it.
+                  jdx < topN - 1 || // Still isn't full given value of topN.
+                  count > out[out.length - 1]["setSize"] // Bigger match than current minimum.
+                ){
+                  out[jdx] = {
+                    "winningPiece": key,
+                    "edge": idx*binSize,
+                    "setSize": count
+                  };
+                  out.sort(function(a, b){
+                    return b.setSize - a.setSize
+                  });
+                  if (jdx < topN - 1){
+                    jdx++;
+                  }
+                }
+              });
+            }
+          break
+
+        case "tripleIdx":
+          loop1:
+            for (let i = 0; i < npts - 2; i++) {
+              const v0 = pts[i];
+              let j = i + 1;
+              while (j < npts - 1) {
+                const v1 = pts[j];
+                const td1 = v1[0] - v0[0];
+                const apd1 = Math.abs(v1[1] - v0[1]);
+                // console.log("i:", i, "j:", j)
+                // Decide whether to proceed to v1 and v2.
+                if (td1 > tMin && td1 < tMax && apd1 >= pMin && apd1 <= pMax) {
+                  let k = j + 1;
+                  while (k < npts) {
+                    const v2 = pts[k];
+                    const td2 = v2[0] - v1[0];
+                    const apd2 = Math.abs(v2[1] - v1[1]);
+                    // console.log("j:", j, "k:", k)
+                    // Decide whether to make a hash entry.
+                    if (td2 > tMin && td2 < tMax && apd2 >= pMin && apd2 <= pMax) {
+                      const he = this.create_hash_entry(
+                        [v1[1] - v0[1], v2[1] - v1[1], td2 / td1], "triples", v0[0]
                       );
                       if (fs.existsSync(path.join(folder, he.hash + ".json"))) {
                         const lookupStr = fs.readFileSync(
@@ -870,39 +977,38 @@ var mf = (function () {
                 j++;
               } // End j while.
             } // for (let i = 0;
+
+            // Collect the topN matches. Will keep this sorted descending by setSize
+            // property.
+            for (let key of countBins.keys()){
+              const countBinsForPiece = countBins.get(key).map((value => {
+                return value.size
+              }));
+              countBinsForPiece.forEach(function(count, idx){
+                if (
+                  jdx === 0 || // Nothing in it.
+                  jdx < topN - 1 || // Still isn't full given value of topN.
+                  count > out[out.length - 1]["setSize"] // Bigger match than current minimum.
+                ){
+                  out[jdx] = {
+                    "winningPiece": key,
+                    "edge": idx*binSize,
+                    "setSize": count,
+                    "queLookupTriplets": Array.from(queLookupHashPointIdx.get(key)[idx])
+                  };
+                  out.sort(function(a, b){
+                    return b.setSize - a.setSize
+                  });
+                  if (jdx < topN - 1){
+                    jdx++;
+                  }
+                }
+              });
+            }
           break
+        
         default:
           console.log("Should not get to default in match_hash_entries() switch.");
-      }
-
-      // Collect the topN matches. Will keep this sorted descending by setSize
-      // property.
-      let out = [];
-      let jdx = 0; // Increment to populate out and throw away any unused entries.
-      for (let key of countBins.keys()){
-        const countBinsForPiece = countBins.get(key).map((value => {
-          return value.size
-        }));
-        countBinsForPiece.forEach(function(count, idx){
-          if (
-            jdx === 0 || // Nothing in it.
-            jdx < topN - 1 || // Still isn't full given value of topN.
-            count > out[out.length - 1]["setSize"] // Bigger match than current minimum.
-          ){
-            out[jdx] = {
-              "winningPiece": key,
-              "edge": idx*binSize,
-              "setSize": count,
-              "queLookupTriplets": Array.from(queLookupHashPointIdx.get(key)[idx])
-            };
-            out.sort(function(a, b){
-              return b.setSize - a.setSize
-            });
-            if (jdx < topN - 1){
-              jdx++;
-            }
-          }
-        });
       }
 
       return {
@@ -910,6 +1016,8 @@ var mf = (function () {
         "uninosHashes": uninh.size,
         "countBins": out
       }
+
+
     }
   }
 
