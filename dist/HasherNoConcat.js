@@ -677,6 +677,210 @@ var HasherNoConcat = function () {
         "countBins": out
       };
     }
+
+    // Return the count of unique matched hashes. 
+    // A query and a lookup piece will be regarded as a matched pair if their fingerprinting score > a threshold.
+
+  }, {
+    key: "match_query_lookup_piece",
+    value: function match_query_lookup_piece(lookupPts, lookupFname, queryPts) {
+      var mode = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : "triples";
+      var tMin = arguments[4];
+      var tMax = arguments[5];
+      var pMin = arguments[6];
+      var pMax = arguments[7];
+      var maxOntimes = arguments[8];
+
+      var _this2 = this;
+
+      var binSize = arguments[9];
+      var topN = arguments.length > 10 && arguments[10] !== undefined ? arguments[10] : 100;
+
+      var lookupHashes = {};
+
+      var uninh = new Set();
+      // const bins = Math.ceil(maxOntimes[maxOntimes.length - 1] / binSize);
+      var countBins = new Map();
+      // let countBin = new Array(bins).fill(0).map(() => {
+      //   return new Set()
+      // })
+      var pts = queryPts.slice(0, 80);
+      var npts = pts.length;
+      var nh = 0;
+
+      // Collect the topN matches. Will keep this sorted descending by setSize
+      // property.
+      var out = [];
+      var jdx = 0; // Increment to populate out and throw away any unused entries.
+
+      switch (mode) {
+        case "triples":
+          // Building hash table for the lookup piece. 
+          for (var i = 0; i < lookupPts.length - 2; i++) {
+            var v0 = lookupPts[i];
+            var j = i + 1;
+            while (j < lookupPts.length - 1) {
+              var v1 = lookupPts[j];
+              var td1 = v1[0] - v0[0];
+              var apd1 = Math.abs(v1[1] - v0[1]);
+              // console.log("i:", i, "j:", j)
+              // Decide whether to proceed to v1 and v2.
+              if (td1 > tMin && td1 < tMax && apd1 >= pMin && apd1 <= pMax) {
+                var k = j + 1;
+                while (k < lookupPts.length) {
+                  var v2 = lookupPts[k];
+                  var td2 = v2[0] - v1[0];
+                  var apd2 = Math.abs(v2[1] - v1[1]);
+                  // console.log("j:", j, "k:", k)
+                  // Decide whether to make a hash entry.
+                  if (td2 > tMin && td2 < tMax && apd2 >= pMin && apd2 <= pMax) {
+                    var he = this.create_hash_entry([v1[1] - v0[1], v2[1] - v1[1], td2 / td1], mode, v0[0]);
+                    if (he.hash in lookupHashes === false) {
+                      lookupHashes[he.hash] = [];
+                    }
+                    lookupHashes[he.hash].push(he.ctimes[0]);
+                  } // End whether to make a hash entry.
+                  if (td2 >= tMax) {
+                    k = lookupPts.length - 1;
+                  }
+                  k++;
+                } // End k while.
+              }
+              if (td1 >= tMax) {
+                j = lookupPts.length - 2;
+              }
+              j++;
+            }
+          }
+
+          // Finding matched hashes.
+          loop1: for (var _i4 = 0; _i4 < npts - 2; _i4++) {
+            var _v7 = queryPts[_i4];
+            var _j3 = _i4 + 1;
+            while (_j3 < npts - 1) {
+              var _v8 = queryPts[_j3];
+              var _td3 = _v8[0] - _v7[0];
+              var _apd3 = Math.abs(_v8[1] - _v7[1]);
+              // console.log("i:", i, "j:", j)
+              // Decide whether to proceed to v1 and v2.
+              if (_td3 > tMin && _td3 < tMax && _apd3 >= pMin && _apd3 <= pMax) {
+                var _k = _j3 + 1;
+                while (_k < npts) {
+                  var _v9 = queryPts[_k];
+                  var _td4 = _v9[0] - _v8[0];
+                  var _apd4 = Math.abs(_v9[1] - _v8[1]);
+                  // console.log("j:", j, "k:", k)
+                  // Decide whether to make a hash entry.
+                  if (_td4 > tMin && _td4 < tMax && _apd4 >= pMin && _apd4 <= pMax) {
+                    var _ret8 = function () {
+                      var he = _this2.create_hash_entry([_v8[1] - _v7[1], _v9[1] - _v8[1], _td4 / _td3], mode, _v7[0]);
+                      if (he.hash in lookupHashes) {
+                        var lookup = lookupHashes[he.hash];
+                        var tmp_fname = lookupFname;
+                        lookup.forEach(function (item) {
+                          var tmp_ontime = item;
+                          // create a new countBin when a new music with quired hash appears.
+                          if (!countBins.has(tmp_fname)) {
+                            var bins = Math.ceil(maxOntimes / binSize);
+                            countBins.set(tmp_fname, new Array(bins).fill(0).map(function () {
+                              return new Set();
+                            }));
+                          }
+                          // Important line, and where other transformation operations
+                          // could be supported in future.
+                          var dif = tmp_ontime - he.ctimes[0];
+                          if (dif >= 0 && dif <= maxOntimes) {
+                            var index_now = Math.floor(dif / binSize);
+                            var setArray = countBins.get(tmp_fname);
+                            var target = setArray[index_now];
+                            target.add(he.hash);
+                          }
+                        });
+                      }
+                      uninh.add(he.hash);
+                      nh++;
+                      if (nh > 5000) {
+                        return "break|loop1";
+                      }
+                    }();
+
+                    if (_ret8 === "break|loop1") break loop1;
+                  } // End whether to make a hash entry.
+                  if (_td4 >= tMax) {
+                    _k = npts - 1;
+                  }
+                  _k++;
+                } // End k while.
+              }
+              if (_td3 >= tMax) {
+                _j3 = npts - 2;
+              }
+              _j3++;
+            } // End j while.
+          } // for (let i = 0;
+
+          // Collect the topN matches. Will keep this sorted descending by setSize
+          // property.
+          var _iteratorNormalCompletion3 = true;
+          var _didIteratorError3 = false;
+          var _iteratorError3 = undefined;
+
+          try {
+            var _loop4 = function _loop4() {
+              var key = _step3.value;
+
+              var countBinsForPiece = countBins.get(key).map(function (value) {
+                return value.size;
+              });
+              countBinsForPiece.forEach(function (count, idx) {
+                if (jdx === 0 || // Nothing in it.
+                jdx < topN - 1 || // Still isn't full given value of topN.
+                count > out[out.length - 1]["setSize"] // Bigger match than current minimum.
+                ) {
+                    out[jdx] = {
+                      "winningPiece": key,
+                      "edge": idx * binSize,
+                      "setSize": count
+                    };
+                    out.sort(function (a, b) {
+                      return b.setSize - a.setSize;
+                    });
+                    if (jdx < topN - 1) {
+                      jdx++;
+                    }
+                  }
+              });
+            };
+
+            for (var _iterator3 = countBins.keys()[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+              _loop4();
+            }
+          } catch (err) {
+            _didIteratorError3 = true;
+            _iteratorError3 = err;
+          } finally {
+            try {
+              if (!_iteratorNormalCompletion3 && _iterator3.return) {
+                _iterator3.return();
+              }
+            } finally {
+              if (_didIteratorError3) {
+                throw _iteratorError3;
+              }
+            }
+          }
+
+          break;
+
+        default:
+          console.log("Should not get to default in match_hash_entries() switch.");
+      }
+      return {
+        "nosHashes": nh,
+        "uninosHashes": uninh.size,
+        "countBins": out
+      };
+    }
   }]);
 
   return HasherNoConcat;
