@@ -68,6 +68,7 @@ TBD
 
 ## Release History
 
+* 0.0.24 Fix rounding errors.
 * 0.0.22-0.0.23 Add a new function match_query_lookup_piece() to build hashes for the input lookup piece and store the hashes in memory. Then, counting how many unique hashes in the query match that in the lookup table.   
 * 0.0.21 Split match_hash_entries() into three cases: "duples", "triples", and "tripleIdx".
 * 0.0.19-0.0.20 Modifications for visualising triples of points that give rise to matching hashes.

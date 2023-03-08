@@ -368,7 +368,7 @@ var HasherNoConcat = function () {
             var j = i + 1;
             while (j < npts) {
               var v1 = pts[j];
-              var td = v1[0] - v0[0];
+              var td = Math.round(100000 * (v1[0] - v0[0])) / 100000;
               var apd = Math.abs(v1[1] - v0[1]);
               // console.log("i:", i, "j:", j)
               // Decide whether to make a hash entry.
@@ -410,7 +410,7 @@ var HasherNoConcat = function () {
             var _j2 = _i2 + 1;
             while (_j2 < npts - 1) {
               var _v4 = pts[_j2];
-              var td1 = _v4[0] - _v3[0];
+              var td1 = Math.round(100000 * (_v4[0] - _v3[0])) / 100000;
               var apd1 = Math.abs(_v4[1] - _v3[1]);
               // console.log("i:", i, "j:", j)
               // Decide whether to proceed to v1 and v2.
@@ -418,7 +418,7 @@ var HasherNoConcat = function () {
                 var k = _j2 + 1;
                 while (k < npts) {
                   var v2 = pts[k];
-                  var td2 = v2[0] - _v4[0];
+                  var td2 = Math.round(100000 * (v2[0] - _v4[0])) / 100000;
                   var apd2 = Math.abs(v2[1] - _v4[1]);
                   // console.log("j:", j, "k:", k)
                   // Decide whether to make a hash entry.
@@ -530,7 +530,7 @@ var HasherNoConcat = function () {
             var j = _i3 + 1;
             while (j < npts - 1) {
               var _v5 = pts[j];
-              var _td = _v5[0] - v0[0];
+              var _td = Math.round(100000 * (_v5[0] - v0[0])) / 100000;
               var _apd = Math.abs(_v5[1] - v0[1]);
               // console.log("i:", i, "j:", j)
               // Decide whether to proceed to v1 and v2.
@@ -539,7 +539,7 @@ var HasherNoConcat = function () {
                   var k = j + 1;
                   while (k < npts) {
                     var _v6 = pts[k];
-                    var _td2 = _v6[0] - _v5[0];
+                    var _td2 = Math.round(100000 * (_v6[0] - _v5[0])) / 100000;
                     var _apd2 = Math.abs(_v6[1] - _v5[1]);
                     // console.log("j:", j, "k:", k)
                     // Decide whether to make a hash entry.
@@ -704,8 +704,9 @@ var HasherNoConcat = function () {
       // let countBin = new Array(bins).fill(0).map(() => {
       //   return new Set()
       // })
-      var pts = queryPts.slice(0, 80);
-      var npts = pts.length;
+      // let pts = queryPts.slice(0, 80)
+      // const npts = pts.length
+      var npts = queryPts.length;
       var nh = 0;
 
       // Collect the topN matches. Will keep this sorted descending by setSize
@@ -721,7 +722,7 @@ var HasherNoConcat = function () {
             var j = i + 1;
             while (j < lookupPts.length - 1) {
               var v1 = lookupPts[j];
-              var td1 = v1[0] - v0[0];
+              var td1 = Math.round(100000 * (v1[0] - v0[0])) / 100000;
               var apd1 = Math.abs(v1[1] - v0[1]);
               // console.log("i:", i, "j:", j)
               // Decide whether to proceed to v1 and v2.
@@ -729,7 +730,7 @@ var HasherNoConcat = function () {
                 var k = j + 1;
                 while (k < lookupPts.length) {
                   var v2 = lookupPts[k];
-                  var td2 = v2[0] - v1[0];
+                  var td2 = Math.round(100000 * (v2[0] - v1[0])) / 100000;
                   var apd2 = Math.abs(v2[1] - v1[1]);
                   // console.log("j:", j, "k:", k)
                   // Decide whether to make a hash entry.
@@ -759,7 +760,7 @@ var HasherNoConcat = function () {
             var _j3 = _i4 + 1;
             while (_j3 < npts - 1) {
               var _v8 = queryPts[_j3];
-              var _td3 = _v8[0] - _v7[0];
+              var _td3 = Math.round(100000 * (_v8[0] - _v7[0])) / 100000;
               var _apd3 = Math.abs(_v8[1] - _v7[1]);
               // console.log("i:", i, "j:", j)
               // Decide whether to proceed to v1 and v2.
@@ -767,7 +768,7 @@ var HasherNoConcat = function () {
                 var _k = _j3 + 1;
                 while (_k < npts) {
                   var _v9 = queryPts[_k];
-                  var _td4 = _v9[0] - _v8[0];
+                  var _td4 = Math.round(100000 * (_v9[0] - _v8[0])) / 100000;
                   var _apd4 = Math.abs(_v9[1] - _v8[1]);
                   // console.log("j:", j, "k:", k)
                   // Decide whether to make a hash entry.

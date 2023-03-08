@@ -775,7 +775,7 @@ var mf = (function () {
             let j = i + 1;
             while (j < npts) {
               const v1 = pts[j];
-              const td = v1[0] - v0[0];
+              const td = Math.round(100000*(v1[0] - v0[0]))/100000;
               const apd = Math.abs(v1[1] - v0[1]);
               // console.log("i:", i, "j:", j)
               // Decide whether to make a hash entry.
@@ -819,7 +819,7 @@ var mf = (function () {
               let j = i + 1;
               while (j < npts - 1) {
                 const v1 = pts[j];
-                const td1 = v1[0] - v0[0];
+                const td1 = Math.round(100000*(v1[0] - v0[0]))/100000;
                 const apd1 = Math.abs(v1[1] - v0[1]);
                 // console.log("i:", i, "j:", j)
                 // Decide whether to proceed to v1 and v2.
@@ -827,7 +827,7 @@ var mf = (function () {
                   let k = j + 1;
                   while (k < npts) {
                     const v2 = pts[k];
-                    const td2 = v2[0] - v1[0];
+                    const td2 = Math.round(100000*(v2[0] - v1[0]))/100000;
                     const apd2 = Math.abs(v2[1] - v1[1]);
                     // console.log("j:", j, "k:", k)
                     // Decide whether to make a hash entry.
@@ -913,7 +913,7 @@ var mf = (function () {
               let j = i + 1;
               while (j < npts - 1) {
                 const v1 = pts[j];
-                const td1 = v1[0] - v0[0];
+                const td1 = Math.round(100000*(v1[0] - v0[0]))/100000;
                 const apd1 = Math.abs(v1[1] - v0[1]);
                 // console.log("i:", i, "j:", j)
                 // Decide whether to proceed to v1 and v2.
@@ -921,7 +921,7 @@ var mf = (function () {
                   let k = j + 1;
                   while (k < npts) {
                     const v2 = pts[k];
-                    const td2 = v2[0] - v1[0];
+                    const td2 = Math.round(100000*(v2[0] - v1[0]))/100000;
                     const apd2 = Math.abs(v2[1] - v1[1]);
                     // console.log("j:", j, "k:", k)
                     // Decide whether to make a hash entry.
@@ -1034,8 +1034,9 @@ var mf = (function () {
       // let countBin = new Array(bins).fill(0).map(() => {
       //   return new Set()
       // })
-      let pts = queryPts.slice(0, 80);
-      const npts = pts.length;
+      // let pts = queryPts.slice(0, 80)
+      // const npts = pts.length
+      const npts = queryPts.length;
       let nh = 0;
 
       // Collect the topN matches. Will keep this sorted descending by setSize
@@ -1051,7 +1052,7 @@ var mf = (function () {
             let j = i + 1;
             while (j < lookupPts.length - 1) {
               const v1 = lookupPts[j];
-              const td1 = v1[0] - v0[0];
+              const td1 = Math.round(100000*(v1[0] - v0[0]))/100000;
               const apd1 = Math.abs(v1[1] - v0[1]);
               // console.log("i:", i, "j:", j)
               // Decide whether to proceed to v1 and v2.
@@ -1059,7 +1060,7 @@ var mf = (function () {
                 let k = j + 1;
                 while (k < lookupPts.length) {
                   const v2 = lookupPts[k];
-                  const td2 = v2[0] - v1[0];
+                  const td2 = Math.round(100000*(v2[0] - v1[0]))/100000;
                   const apd2 = Math.abs(v2[1] - v1[1]);
                   // console.log("j:", j, "k:", k)
                   // Decide whether to make a hash entry.
@@ -1093,7 +1094,7 @@ var mf = (function () {
               let j = i + 1;
               while (j < npts - 1) {
                 const v1 = queryPts[j];
-                const td1 = v1[0] - v0[0];
+                const td1 = Math.round(100000*(v1[0] - v0[0]))/100000;
                 const apd1 = Math.abs(v1[1] - v0[1]);
                 // console.log("i:", i, "j:", j)
                 // Decide whether to proceed to v1 and v2.
@@ -1101,7 +1102,7 @@ var mf = (function () {
                   let k = j + 1;
                   while (k < npts) {
                     const v2 = queryPts[k];
-                    const td2 = v2[0] - v1[0];
+                    const td2 = Math.round(100000*(v2[0] - v1[0]))/100000;
                     const apd2 = Math.abs(v2[1] - v1[1]);
                     // console.log("j:", j, "k:", k)
                     // Decide whether to make a hash entry.
