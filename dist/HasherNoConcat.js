@@ -65,8 +65,8 @@ var HasherNoConcat = function () {
               // Decide whether to make a hash entry.
               if (td > tMin && td < tMax && apd >= pMin && apd <= pMax) {
                 // Make a hash entry, something like "±pdtd"
-                var he = this.create_hash_entry([v1[1] - v0[1], td], mode, v0[0], fnam, tMin, tMax);
-                this.insert(he);
+                var _he = this.create_hash_entry([v1[1] - v0[1], td], mode, v0[0], fnam, tMin, tMax);
+                this.insert(_he);
                 nh++;
               } // End whether to make a hash entry.
               if (td >= tMax) {
@@ -97,8 +97,8 @@ var HasherNoConcat = function () {
                   // Decide whether to make a hash entry.
                   if (td2 > tMin && td2 < tMax && apd2 >= pMin && apd2 <= pMax) {
                     // Make a hash entry, something like "±pd1±pd2tdr"
-                    var _he = this.create_hash_entry([_v2[1] - _v[1], v2[1] - _v2[1], td2 / td1], mode, _v[0], fnam, tMin, tMax);
-                    this.insert(_he, insertMode, folder, [_i, _j, k]);
+                    var _he2 = this.create_hash_entry([_v2[1] - _v[1], v2[1] - _v2[1], td2 / td1], mode, _v[0], fnam, tMin, tMax);
+                    this.insert(_he2, insertMode, folder, [_i, _j, k]);
                     nh++;
                   } // End whether to make a hash entry.
                   if (td2 >= tMax) {
@@ -735,11 +735,11 @@ var HasherNoConcat = function () {
                   // console.log("j:", j, "k:", k)
                   // Decide whether to make a hash entry.
                   if (td2 > tMin && td2 < tMax && apd2 >= pMin && apd2 <= pMax) {
-                    var he = this.create_hash_entry([v1[1] - v0[1], v2[1] - v1[1], td2 / td1], mode, v0[0]);
-                    if (he.hash in lookupHashes === false) {
-                      lookupHashes[he.hash] = [];
+                    var _he3 = this.create_hash_entry([v1[1] - v0[1], v2[1] - v1[1], td2 / td1], mode, v0[0]);
+                    if (_he3.hash in lookupHashes === false) {
+                      lookupHashes[_he3.hash] = [];
                     }
-                    lookupHashes[he.hash].push(he.ctimes[0]);
+                    lookupHashes[_he3.hash].push(_he3.ctimes[0]);
                   } // End whether to make a hash entry.
                   if (td2 >= tMax) {
                     k = lookupPts.length - 1;
@@ -882,14 +882,16 @@ var HasherNoConcat = function () {
         "countBins": out
       };
     }
+
+    // Checking if a query matches a lookup piece by taking pre-processed hashes as input.
+
   }, {
     key: "match_precomputed_hashes",
-    value: function match_precomputed_hashes(h2, maxOntimes, binSize) {
-      var _this3 = this;
+    value: function match_precomputed_hashes(input_lookupHashes, input_queryHashes, maxOntimes, binSize) {
+      var topN = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : 100;
 
-      var topN = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 100;
-
-      var lookupHashes = {};
+      var lookupHashes = input_lookupHashes;
+      var queryHashes = Object.keys(input_queryHashes);
 
       var uninh = new Set();
       // const bins = Math.ceil(maxOntimes[maxOntimes.length - 1] / binSize);
@@ -909,72 +911,43 @@ var HasherNoConcat = function () {
 
       switch (mode) {
         case "triples":
+          var _loop5 = function _loop5(i) {
+            if (queryHashes[i] in lookupHashes) {
+              var lookup = lookupHashes[queryHashes[i]];
+              var tmp_fname = lookupFname;
+              lookup.forEach(function (item) {
+                var tmp_ontime = item;
+                // create a new countBin when a new music with quired hash appears.
+                if (!countBins.has(tmp_fname)) {
+                  var bins = Math.ceil(maxOntimes / binSize);
+                  countBins.set(tmp_fname, new Array(bins).fill(0).map(function () {
+                    return new Set();
+                  }));
+                }
+                // Important line, and where other transformation operations
+                // could be supported in future.
+                var dif = tmp_ontime - he.ctimes[0];
+                if (dif >= 0 && dif <= maxOntimes) {
+                  var index_now = Math.floor(dif / binSize);
+                  var setArray = countBins.get(tmp_fname);
+                  var target = setArray[index_now];
+                  target.add(queryHashes[i]);
+                }
+              });
+            }
+            uninh.add(queryHashes[i]);
+            nh++;
+            if (nh > 5000) {
+              return "break|loop1";
+            }
+          };
 
           // Finding matched hashes.
-          loop1: for (var i = 0; i < npts - 2; i++) {
-            var v0 = queryPts[i];
-            var j = i + 1;
-            while (j < npts - 1) {
-              var v1 = queryPts[j];
-              var td1 = Math.round(100000 * (v1[0] - v0[0])) / 100000;
-              var apd1 = Math.abs(v1[1] - v0[1]);
-              // console.log("i:", i, "j:", j)
-              // Decide whether to proceed to v1 and v2.
-              if (td1 > tMin && td1 < tMax && apd1 >= pMin && apd1 <= pMax) {
-                var k = j + 1;
-                while (k < npts) {
-                  var v2 = queryPts[k];
-                  var td2 = Math.round(100000 * (v2[0] - v1[0])) / 100000;
-                  var apd2 = Math.abs(v2[1] - v1[1]);
-                  // console.log("j:", j, "k:", k)
-                  // Decide whether to make a hash entry.
-                  if (td2 > tMin && td2 < tMax && apd2 >= pMin && apd2 <= pMax) {
-                    var _ret10 = function () {
-                      var he = _this3.create_hash_entry([v1[1] - v0[1], v2[1] - v1[1], td2 / td1], mode, v0[0]);
-                      if (he.hash in lookupHashes) {
-                        var lookup = lookupHashes[he.hash];
-                        var tmp_fname = lookupFname;
-                        lookup.forEach(function (item) {
-                          var tmp_ontime = item;
-                          // create a new countBin when a new music with quired hash appears.
-                          if (!countBins.has(tmp_fname)) {
-                            var bins = Math.ceil(maxOntimes / binSize);
-                            countBins.set(tmp_fname, new Array(bins).fill(0).map(function () {
-                              return new Set();
-                            }));
-                          }
-                          // Important line, and where other transformation operations
-                          // could be supported in future.
-                          var dif = tmp_ontime - he.ctimes[0];
-                          if (dif >= 0 && dif <= maxOntimes) {
-                            var index_now = Math.floor(dif / binSize);
-                            var setArray = countBins.get(tmp_fname);
-                            var target = setArray[index_now];
-                            target.add(he.hash);
-                          }
-                        });
-                      }
-                      uninh.add(he.hash);
-                      nh++;
-                      if (nh > 5000) {
-                        return "break|loop1";
-                      }
-                    }();
+          loop1: for (var i = 0; i < queryHashes.length; i++) {
+            var _ret10 = _loop5(i);
 
-                    if (_ret10 === "break|loop1") break loop1;
-                  } // End whether to make a hash entry.
-                  if (td2 >= tMax) {
-                    k = npts - 1;
-                  }
-                  k++;
-                } // End k while.
-              }
-              if (td1 >= tMax) {
-                j = npts - 2;
-              }
-              j++;
-            } // End j while.
-          } // for (let i = 0;
+            if (_ret10 === "break|loop1") break loop1;
+          }
 
           // Collect the topN matches. Will keep this sorted descending by setSize
           // property.
@@ -983,7 +956,7 @@ var HasherNoConcat = function () {
           var _iteratorError4 = undefined;
 
           try {
-            var _loop5 = function _loop5() {
+            var _loop6 = function _loop6() {
               var key = _step4.value;
 
               var countBinsForPiece = countBins.get(key).map(function (value) {
@@ -1010,7 +983,7 @@ var HasherNoConcat = function () {
             };
 
             for (var _iterator4 = countBins.keys()[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
-              _loop5();
+              _loop6();
             }
           } catch (err) {
             _didIteratorError4 = true;
