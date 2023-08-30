@@ -769,9 +769,10 @@ export default class HasherNoConcat {
 
   // Checking if a query matches a lookup piece by taking pre-processed hashes as input.
   match_precomputed_hashes(
-    input_lookupHashes, input_queryHashes, maxOntimes, binSize, topN = 100
+    input_lookupHashes, input_queryHashes, maxOntimes, binSize, lookupFname, topN = 100, mode = "triples"
   ){
     const lookupHashes = input_lookupHashes
+    const queryFull = input_queryHashes
     const queryHashes = Object.keys(input_queryHashes)
 
     let uninh = new Set()
@@ -782,7 +783,6 @@ export default class HasherNoConcat {
     // })
     // let pts = queryPts.slice(0, 80)
     // const npts = pts.length
-    const npts = queryPts.length
     let nh = 0
 
     // Collect the topN matches. Will keep this sorted descending by setSize
@@ -796,7 +796,7 @@ export default class HasherNoConcat {
         loop1:
           for (let i = 0; i < queryHashes.length; i ++){
             if (queryHashes[i] in lookupHashes) {
-              let lookup = lookupHashes[queryHashes[i]]
+              let lookup = lookupHashes[queryHashes[i]].ctimes
               let tmp_fname = lookupFname
               lookup.forEach(function(item){
                 let tmp_ontime = item
@@ -807,12 +807,16 @@ export default class HasherNoConcat {
                 }
                 // Important line, and where other transformation operations
                 // could be supported in future.
-                let dif = tmp_ontime - he.ctimes[0]
-                if (dif >= 0 && dif <= maxOntimes){
-                  var index_now = Math.floor(dif / binSize);
-                  var setArray = countBins.get(tmp_fname);
-                  var target = setArray[index_now];
-                  target.add(queryHashes[i]);
+                // Loop over ctimes in the query.
+                const query_ctimes = queryFull[queryHashes[i]].ctimes
+                for(let idx_q_ctimes = 0; idx_q_ctimes < query_ctimes.length; idx_q_ctimes ++){
+                  let dif = tmp_ontime - query_ctimes[idx_q_ctimes]
+                  if (dif >= 0 && dif <= maxOntimes){
+                    var index_now = Math.floor(dif / binSize);
+                    var setArray = countBins.get(tmp_fname);
+                    var target = setArray[index_now];
+                    target.add(queryHashes[i]);
+                  }
                 }
               })
             }
