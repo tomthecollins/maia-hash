@@ -30,9 +30,9 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  * Algorithms, Inc. in various applications that we have produced or are
  * developing currently.
  *
- * @version 0.0.18
+ * @version 0.0.25
  * @author Tom Collins and Chenyu Gao
- * @copyright 2022
+ * @copyright 2022-23
  *
  */
 
