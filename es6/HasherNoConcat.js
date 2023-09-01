@@ -65,7 +65,7 @@ export default class HasherNoConcat {
           let j = i + 1
           while (j < npts - 1) {
             const v1 = pts[j]
-            const td1 = v1[0] - v0[0]
+            const td1 = Math.round(100000*(v1[0] - v0[0])/100000)
             const apd1 = Math.abs(v1[1] - v0[1])
             // console.log("i:", i, "j:", j)
             // Decide whether to proceed to v1 and v2.
@@ -73,7 +73,7 @@ export default class HasherNoConcat {
               let k = j + 1
               while (k < npts) {
                 const v2 = pts[k]
-                const td2 = v2[0] - v1[0]
+                const td2 = Math.round(100000*(v2[0] - v1[0])/100000)
                 const apd2 = Math.abs(v2[1] - v1[1])
                 // console.log("j:", j, "k:", k)
                 // Decide whether to make a hash entry.
