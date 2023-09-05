@@ -83,7 +83,7 @@ var HasherNoConcat = function () {
             var _j = _i + 1;
             while (_j < npts - 1) {
               var _v2 = pts[_j];
-              var td1 = Math.round(100000 * (_v2[0] - _v[0]) / 100000);
+              var td1 = Math.round(100000 * (_v2[0] - _v[0])) / 100000;
               var apd1 = Math.abs(_v2[1] - _v[1]);
               // console.log("i:", i, "j:", j)
               // Decide whether to proceed to v1 and v2.
@@ -91,7 +91,7 @@ var HasherNoConcat = function () {
                 var k = _j + 1;
                 while (k < npts) {
                   var v2 = pts[k];
-                  var td2 = Math.round(100000 * (v2[0] - _v2[0]) / 100000);
+                  var td2 = Math.round(100000 * (v2[0] - _v2[0])) / 100000;
                   var apd2 = Math.abs(v2[1] - _v2[1]);
                   // console.log("j:", j, "k:", k)
                   // Decide whether to make a hash entry.
